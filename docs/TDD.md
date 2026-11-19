@@ -23,7 +23,7 @@ Para un bug: primero un test que lo reproduce (rojo), luego el arreglo (verde).
 | Esquemas Zod | `tests/unit` | Casos válidos, inválidos y extremos. |
 | HTTP / rutas | `tests/integration` | Llamar el handler (`POST(req)`) y verificar status, cuerpo y errores. |
 | Hooks y vistas React | `tests/components` | jsdom + `tests/helpers/fake-api.ts` (servicio real detrás de `fetch`) + timers falsos. |
-| Flujos completos | `tests/e2e` (Playwright, pendiente) | Solo caminos críticos. |
+| Flujos completos | `tests/e2e` (Playwright, `npm run test:e2e`, build real) | Solo caminos críticos; no entra en `verify`, se corre al cerrar fases con PWA/SW. |
 
 Los tests describen **comportamiento observable** (qué ve el usuario, qué responde la API),
 no detalles internos. Se consultan elementos por rol/etiqueta accesible, no por clases CSS.
@@ -46,7 +46,7 @@ no detalles internos. Se consultan elementos por rol/etiqueta accesible, no por 
 npm run test:watch     # modo TDD: re-ejecuta al guardar
 npm test               # suite completa, una vez
 npm run test:coverage  # con umbrales (líneas/sentencias/funciones 90 %, ramas 85 %)
-npm run verify         # lint + typecheck + tests con cobertura (antes de cada commit)
+npm run verify         # lint + typecheck + tests con cobertura + build (antes de cada commit)
 ```
 
 La cobertura es una **red de seguridad, no el objetivo**: un 100 % sin aserciones no vale.
@@ -57,7 +57,8 @@ suite falla; luego revertir. Los tests de tracking deben matar estas mutaciones.
 ## Definición de "terminado" para cualquier cambio
 
 - [ ] Hay un test que falló antes del cambio y pasa después.
-- [ ] `npm run verify` y `npm run build` pasan sin errores ni warnings nuevos.
+- [ ] `npm run verify` (incluye `build`) pasa sin errores ni warnings nuevos. El build detecta
+      lo que jsdom no ve, p. ej. `Date.now()` en el render rompe el prerender de Next.
 - [ ] No se desactivaron reglas, no se borraron ni se debilitaron tests para hacerlos pasar.
 - [ ] Commits pequeños: idealmente uno por ciclo rojo→verde→refactor (o el test y su código juntos).
 

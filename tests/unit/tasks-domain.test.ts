@@ -216,6 +216,20 @@ describe("sortTasks", () => {
     expect(ids(sortTasks(list, "due"))).toEqual(["pronto", "tarde", "sin"]);
   });
 
+  it("due: sin fecha queda al final sin importar el orden de entrada", () => {
+    const con = (id: string, dueAt: number) => make({ id, dueAt });
+    const sin = make({ id: "sin", dueAt: null });
+    const orders = [
+      [sin, con("a", 10), con("b", 20)],
+      [con("a", 10), sin, con("b", 20)],
+      [con("b", 20), con("a", 10), sin],
+      [con("b", 20), sin, con("a", 10)],
+    ];
+    for (const list of orders) {
+      expect(sortTasks(list, "due").map((t) => t.id)).toEqual(["a", "b", "sin"]);
+    }
+  });
+
   it("priority: alta, media, baja; desempata por fecha", () => {
     const list = [
       make({ id: "baja", priority: "low" }),

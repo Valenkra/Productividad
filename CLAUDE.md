@@ -13,7 +13,8 @@ La especificación está en `docs/SPEC.md`. El proceso de desarrollo está en `d
 4. Un bug = primero un test que lo reproduce.
 5. Nunca debilites, borres ni saltees un test para que pase; si un test es incorrecto,
    explicá por qué y corregilo a la vista.
-6. Antes de dar algo por terminado: `npm run verify` y `npm run build` limpios.
+6. Antes de dar algo por terminado: `npm run verify` (lint + typecheck + cobertura + build) limpio.
+   Nunca `Date.now()`/`Math.random()` durante el render de un componente (rompe el build).
 7. La lógica recibe el reloj por inyección (`now`); los tests no usan tiempo real.
 
 ## Comandos

@@ -1,5 +1,5 @@
-import { ComingSoon } from "@/components/feedback/coming-soon";
+import { TasksView } from "@/features/tasks/tasks-view";
 
-export default function Page() {
-  return <ComingSoon title="Tareas" phase="Fase 3" />;
+export default function TasksPage() {
+  return <TasksView />;
 }

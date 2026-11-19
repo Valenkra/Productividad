@@ -92,6 +92,10 @@ export function installFakeApi(
         run();
       }
       try {
+        if (input.startsWith("/api/stats")) {
+          const tz = new URL(input, "http://x").searchParams.get("tz") ?? "UTC";
+          return json(200, await service.getStats(userId, tz));
+        }
         if (input.startsWith("/api/tasks") && tasks) {
           const url = new URL(input, "http://x");
           const id = url.pathname.split("/")[3];

@@ -1,6 +1,8 @@
 "use client";
 
+import type { Task } from "@/features/tasks/types";
 import { formatDayLabel, formatMinutes } from "@/lib/time/format";
+import { useApi } from "@/lib/utils/use-api";
 import { useStats } from "./use-stats";
 
 const MODE_LABEL = {
@@ -11,6 +13,7 @@ const MODE_LABEL = {
 
 export function HistoryView() {
   const { data, error, loading } = useStats();
+  const tasksApi = useApi<{ tasks: Task[] }>("/api/tasks?status=all");
 
   if (loading) return <p role="status">Cargando historial…</p>;
   if (error || !data)
@@ -86,7 +89,7 @@ export function HistoryView() {
                 key={t.taskId}
                 className="flex justify-between border-b border-border py-1"
               >
-                <span>Tarea {t.taskId.slice(0, 8)}</span>
+                <span>{taskName(t.taskId, tasksApi.data?.tasks)}</span>
                 <span>{formatMinutes(t.focusSeconds)}</span>
               </li>
             ))}
@@ -127,4 +130,10 @@ export function HistoryView() {
       </div>
     </section>
   );
+}
+
+/** Con la lista cargada, un id desconocido es una tarea borrada; sin ella, se muestra el id corto. */
+function taskName(taskId: string, tasks: Task[] | undefined): string {
+  if (!tasks) return `Tarea ${taskId.slice(0, 8)}`;
+  return tasks.find((t) => t.id === taskId)?.title ?? "Tarea eliminada";
 }

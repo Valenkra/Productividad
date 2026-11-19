@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { FocusState, HeartbeatResponse } from "@/server/services/focus-service";
+import { getAttention, subscribeAttention } from "@/lib/utils/browser-signals";
+import { useOnline } from "@/lib/utils/use-online";
 import { HEARTBEAT_INTERVAL_SECONDS, MAX_CREDIT_SECONDS } from "./config";
 
 const BASE = "/api/focus-sessions";
@@ -17,26 +19,6 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
   return body as T;
 }
 
-function subscribeAttention(cb: () => void) {
-  const events = ["visibilitychange", "focus", "blur", "pageshow", "pagehide"];
-  events.forEach((e) => window.addEventListener(e, cb));
-  document.addEventListener("visibilitychange", cb);
-  return () => {
-    events.forEach((e) => window.removeEventListener(e, cb));
-    document.removeEventListener("visibilitychange", cb);
-  };
-}
-const getAttention = () => document.visibilityState === "visible" && document.hasFocus();
-
-function subscribeOnline(cb: () => void) {
-  window.addEventListener("online", cb);
-  window.addEventListener("offline", cb);
-  return () => {
-    window.removeEventListener("online", cb);
-    window.removeEventListener("offline", cb);
-  };
-}
-
 export function useFocusSession() {
   const [state, setState] = useState<FocusState | null>(null);
   const [syncedAt, setSyncedAt] = useState(0);
@@ -46,11 +28,7 @@ export function useFocusSession() {
   const [notice, setNotice] = useState<string | null>(null);
 
   const attentive = useSyncExternalStore(subscribeAttention, getAttention, () => true);
-  const online = useSyncExternalStore(
-    subscribeOnline,
-    () => navigator.onLine,
-    () => true,
-  );
+  const online = useOnline();
 
   const pendingKey = useRef<string | null>(null);
   const inFlight = useRef(false);

@@ -100,6 +100,44 @@ describe("FocusPanel con tareas", () => {
     });
   });
 
+  it("los descansos NO heredan la tarea elegida para el foco anterior", async () => {
+    vi.useFakeTimers();
+    try {
+      const task = await seed("Resolver guía");
+      render(<FocusPanel />);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0);
+      });
+      fireEvent.change(screen.getByLabelText("Tarea (opcional)"), {
+        target: { value: task.id },
+      });
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name: "Empezar a estudiar" }));
+        await vi.advanceTimersByTimeAsync(0);
+      });
+      // Se completa el bloque de foco (1500 s) con heartbeats reales cada 15 s.
+      for (let i = 0; i < 101; i++) {
+        await act(async () => {
+          ctx.advance(15);
+          await vi.advanceTimersByTimeAsync(15_000);
+        });
+      }
+      const next = screen.getByRole("button", { name: /Siguiente: Descanso corto/ });
+      await act(async () => {
+        fireEvent.click(next);
+        await vi.advanceTimersByTimeAsync(0);
+      });
+      const starts = api.calls.filter(
+        (c) => c.url === "/api/focus-sessions" && c.method === "POST",
+      );
+      expect(starts).toHaveLength(2);
+      expect(starts[0].body).toEqual({ taskId: task.id });
+      expect(starts[1].body).toEqual({}); // el descanso va sin tarea
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("sin tareas, no muestra selector y sigue funcionando", async () => {
     render(<FocusPanel />);
     await screen.findByRole("button", { name: "Empezar a estudiar" });

@@ -31,7 +31,9 @@ export function FocusPanel() {
   const [taskId, setTaskId] = useState("");
   // Si las tareas no cargan, el foco sigue funcionando sin selector.
   const allTasks = tasksApi.data?.tasks ?? [];
-  const openTasks = allTasks.filter((t) => t.status === "todo" || t.status === "in_progress");
+  const openTasks = allTasks.filter(
+    (t) => t.status === "todo" || t.status === "in_progress",
+  );
 
   if (f.loading) return <p role="status">Cargando sesión…</p>;
   if (!f.state) return <p role="alert">{f.error ?? "No se pudo cargar el estado."}</p>;
@@ -41,7 +43,9 @@ export function FocusPanel() {
   const finished =
     session && (session.status === "completed" || session.status === "abandoned");
   const mode = f.open && session ? session.mode : nextMode;
-  const currentTask = session?.taskId ? allTasks.find((t) => t.id === session.taskId) : undefined;
+  const currentTask = session?.taskId
+    ? allTasks.find((t) => t.id === session.taskId)
+    : undefined;
 
   const confirmThen = (message: string, action: () => void) => {
     if (window.confirm(message)) action();

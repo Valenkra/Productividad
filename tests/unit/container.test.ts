@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { LOCAL_USER_ID, requireUserId } from "@/server/auth";
-import { getFocusService } from "@/server/container";
+import { getFocusService, getTaskService } from "@/server/container";
 
 describe("container", () => {
   it("es un singleton: el estado persiste entre llamadas", async () => {
@@ -15,5 +15,30 @@ describe("container", () => {
 describe("auth (modo local)", () => {
   it("devuelve el usuario local fijo", async () => {
     expect(await requireUserId()).toBe(LOCAL_USER_ID);
+  });
+});
+
+describe("container: tareas y sesiones comparten el mismo almacén", () => {
+  it("una sesión puede asociarse a una tarea creada con el servicio real", async () => {
+    const task = await getTaskService().create("wiring-user", {
+      title: "Probar el cableado",
+      description: null,
+      priority: "medium",
+      dueAt: null,
+    });
+    const { session } = await getFocusService().start("wiring-user", { taskId: task.id });
+    expect(session?.taskId).toBe(task.id);
+  });
+
+  it("no acepta tareas de otro usuario", async () => {
+    const task = await getTaskService().create("dueño", {
+      title: "Ajena",
+      description: null,
+      priority: "low",
+      dueAt: null,
+    });
+    await expect(
+      getFocusService().start("intruso", { taskId: task.id }),
+    ).rejects.toMatchObject({ code: "task_not_found" });
   });
 });

@@ -170,8 +170,9 @@ describe("TasksView: editar", () => {
     render(<TasksView />);
     await screen.findByText("Viejo");
     fireEvent.click(screen.getByRole("button", { name: /^Editar/ }));
-    fireEvent.change(screen.getByLabelText("Título"), { target: { value: "Nuevo" } });
-    fireEvent.change(screen.getByLabelText("Prioridad"), { target: { value: "low" } });
+    const row = within(screen.getByRole("listitem"));
+    fireEvent.change(row.getByLabelText("Título"), { target: { value: "Nuevo" } });
+    fireEvent.change(row.getByLabelText("Prioridad"), { target: { value: "low" } });
     fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
     await waitFor(() => expect(titles()).toEqual(["Nuevo"]));
     expect(mutations()[0].body).toMatchObject({ title: "Nuevo", priority: "low" });

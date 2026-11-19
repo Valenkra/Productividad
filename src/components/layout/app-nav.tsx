@@ -9,7 +9,7 @@ export function AppNav() {
   return (
     <nav
       aria-label="Principal"
-      className="fixed inset-x-0 bottom-0 z-10 border-t border-border bg-surface md:static md:w-52 md:border-t-0 md:border-r md:p-4"
+      className="fixed inset-x-0 bottom-0 z-10 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] md:static md:w-52 md:border-t-0 md:border-r md:p-4 md:pb-4"
     >
       <ul className="flex md:flex-col md:gap-1">
         {NAV_ITEMS.map(({ href, label }) => {
