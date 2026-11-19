@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("el manifest es válido y sus íconos se sirven como imagen", async ({ page, request }) => {
+test("el manifest es válido y sus íconos se sirven como imagen", async ({ request }) => {
   const res = await request.get("/manifest.webmanifest");
   expect(res.ok()).toBe(true);
   const manifest = await res.json();
