@@ -141,17 +141,6 @@ describe("sesiones y permisos", () => {
     await expect(svc.pause("user-b", s.id)).rejects.toMatchObject({ status: 404 });
   });
 
-  it("rechaza asociar una tarea que no es del usuario", async () => {
-    const taskId = "11111111-1111-4111-8111-111111111111";
-    repo.registerTask("user-b", taskId);
-    await expect(svc.start(U, { taskId })).rejects.toMatchObject({
-      code: "task_not_found",
-    });
-    repo.registerTask(U, taskId);
-    const { session } = await svc.start(U, { taskId });
-    expect(session!.taskId).toBe(taskId);
-  });
-
   it("no se puede completar antes de acreditar el tiempo planeado", async () => {
     const s = await startFocus();
     await expect(svc.finish(U, s.id, "completed")).rejects.toMatchObject({

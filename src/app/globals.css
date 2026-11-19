@@ -29,7 +29,42 @@ body {
   font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
 
+@keyframes plant-pop {
+  from {
+    transform: scale(0.92);
+  }
+  60% {
+    transform: scale(1.04);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes plant-sway {
+  0%,
+  100% {
+    transform: rotate(-1.5deg);
+  }
+  50% {
+    transform: rotate(1.5deg);
+  }
+}
+
+.plant-pop {
+  animation: plant-pop 0.6s ease-out;
+}
+
+.plant-sway {
+  animation: plant-sway 4s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .plant-pop,
+  .plant-sway {
+    animation: none;
+  }
+
   *,
   *::before,
   *::after {

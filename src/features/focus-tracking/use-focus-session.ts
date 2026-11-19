@@ -179,7 +179,7 @@ export function useFocusSession() {
     online,
     displayedSeconds,
     remainingSeconds: Math.max(0, planned - displayedSeconds),
-    start: () => run(BASE, {}),
+    start: (taskId?: string | null) => run(BASE, taskId ? { taskId } : {}),
     pause: () => sessionId && run(`${BASE}/${sessionId}/pause`),
     resume: () => sessionId && run(`${BASE}/${sessionId}/resume`),
     finish: (outcome: "completed" | "abandoned") =>

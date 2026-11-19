@@ -1,4 +1,5 @@
 import type { FocusInterval, FocusSession } from "@/features/focus-tracking/types";
+import { DEFAULT_USER_SETTINGS, type UserSettings } from "@/features/settings/schema";
 import type { CreditInput, FocusRepository, UserProgress } from "./focus-repository";
 
 /** Implementación local en memoria (se pierde al reiniciar el servidor). Temporal hasta Supabase. */
@@ -6,7 +7,7 @@ export class MemoryFocusRepository implements FocusRepository {
   private sessions = new Map<string, FocusSession>();
   private intervals = new Map<string, FocusInterval>();
   private progress = new Map<string, UserProgress>();
-  private tasks = new Map<string, Set<string>>();
+  private settings = new Map<string, UserSettings>();
 
   async getSession(userId: string, id: string) {
     const s = this.sessions.get(id);
@@ -52,15 +53,20 @@ export class MemoryFocusRepository implements FocusRepository {
     return { ...this.getOrCreate(userId) };
   }
 
-  async taskBelongsToUser(userId: string, taskId: string) {
-    return this.tasks.get(userId)?.has(taskId) ?? false;
+  async listSessions(userId: string) {
+    return [...this.sessions.values()].filter((s) => s.userId === userId);
   }
 
-  /** Solo para tests y para la Fase 3 (tareas locales). */
-  registerTask(userId: string, taskId: string) {
-    const set = this.tasks.get(userId) ?? new Set<string>();
-    set.add(taskId);
-    this.tasks.set(userId, set);
+  async listIntervals(userId: string) {
+    return [...this.intervals.values()].filter((i) => i.userId === userId);
+  }
+
+  async getSettings(userId: string) {
+    return { ...(this.settings.get(userId) ?? DEFAULT_USER_SETTINGS) };
+  }
+
+  async saveSettings(userId: string, settings: UserSettings) {
+    this.settings.set(userId, { ...settings });
   }
 
   private getOrCreate(userId: string): UserProgress {

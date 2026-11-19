@@ -1,5 +1,5 @@
-import { ComingSoon } from "@/components/feedback/coming-soon";
+import { SettingsForm } from "@/features/settings/settings-form";
 
 export default function Page() {
-  return <ComingSoon title="Ajustes" phase="Fase 6" />;
+  return <SettingsForm />;
 }

@@ -1,5 +1,5 @@
-import { ComingSoon } from "@/components/feedback/coming-soon";
+import { HistoryView } from "@/features/history/history-view";
 
 export default function Page() {
-  return <ComingSoon title="Historial" phase="Fase 6" />;
+  return <HistoryView />;
 }

@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
+import { connection, NextResponse } from "next/server";
 import { ZodError, type ZodType } from "zod";
-import { DomainError } from "./services/focus-service";
+import { DomainError } from "./errors";
 
 export async function parseBody<T>(request: Request, schema: ZodType<T>): Promise<T> {
   let json: unknown = {};
@@ -17,6 +17,7 @@ export async function parseBody<T>(request: Request, schema: ZodType<T>): Promis
 
 /** Ejecuta un handler traduciendo errores de dominio y validación a respuestas HTTP. */
 export async function handle(fn: () => Promise<unknown>): Promise<NextResponse> {
+  await connection(); // nunca prerenderizar: depende del usuario y del tiempo
   try {
     return NextResponse.json(await fn(), { headers: { "Cache-Control": "no-store" } });
   } catch (error) {

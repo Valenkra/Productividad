@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { DomainError } from "../errors";
 import {
   applyHeartbeat,
   createSession,
@@ -9,19 +10,11 @@ import {
 } from "@/features/focus-tracking/domain";
 import type { FocusMode, FocusSession } from "@/features/focus-tracking/types";
 import { nextMode, plannedSecondsFor } from "@/features/pomodoro/sequence";
-import type { PomodoroSettings } from "@/features/pomodoro/settings";
-import { DEFAULT_POMODORO_SETTINGS } from "@/features/pomodoro/settings";
+import { computeStats, isValidTimeZone } from "@/features/history/stats";
+import type { UserSettings } from "@/features/settings/schema";
 import type { FocusRepository, UserProgress } from "../repositories/focus-repository";
 
-export class DomainError extends Error {
-  constructor(
-    public readonly code: string,
-    public readonly status: number,
-    message: string,
-  ) {
-    super(message);
-  }
-}
+export { DomainError };
 
 export interface FocusState {
   session: FocusSession | null;
@@ -43,12 +36,13 @@ export function createFocusService(deps: {
   repo: FocusRepository;
   now?: () => number;
   newId?: () => string;
-  settings?: PomodoroSettings;
+  /** ¿La tarea existe y es del usuario? Si no se inyecta, ninguna tarea es válida. */
+  ownsTask?: (userId: string, taskId: string) => Promise<boolean>;
 }) {
   const { repo } = deps;
+  const ownsTask = deps.ownsTask ?? (async () => false);
   const now = deps.now ?? Date.now;
   const newId = deps.newId ?? randomUUID;
-  const settings = deps.settings ?? DEFAULT_POMODORO_SETTINGS;
 
   /** Qué pasa con el ciclo Pomodoro cuando una sesión termina. */
   function cycleAfter(session: FocusSession, p: UserProgress): CycleProgress {
@@ -86,6 +80,7 @@ export function createFocusService(deps: {
     session: FocusSession | null,
   ): Promise<FocusState> {
     const p = await repo.getProgress(userId);
+    const settings = await repo.getSettings(userId);
     const next = nextMode(p.cycleFocusCount, p.lastMode, settings);
     return {
       session,
@@ -97,6 +92,45 @@ export function createFocusService(deps: {
   }
 
   return {
+    /** Total de segundos válidos de la planta; etapa y progreso se derivan en `growth.ts`. */
+    async getGarden(userId: string): Promise<{ plantTotalSeconds: number }> {
+      const p = await repo.getProgress(userId);
+      return { plantTotalSeconds: p.plantTotalSeconds };
+    },
+
+    getSettings: (userId: string): Promise<UserSettings> => repo.getSettings(userId),
+
+    async updateSettings(
+      userId: string,
+      patch: Partial<UserSettings>,
+    ): Promise<UserSettings> {
+      const next = { ...(await repo.getSettings(userId)), ...patch };
+      await repo.saveSettings(userId, next);
+      return next;
+    },
+
+    async getStats(userId: string, timeZone: string) {
+      if (!isValidTimeZone(timeZone)) {
+        throw new DomainError("invalid_timezone", 400, "Zona horaria inválida");
+      }
+      const [sessions, intervals, settings, progress] = await Promise.all([
+        repo.listSessions(userId),
+        repo.listIntervals(userId),
+        repo.getSettings(userId),
+        repo.getProgress(userId),
+      ]);
+      return {
+        ...computeStats({
+          sessions,
+          intervals,
+          timeZone,
+          now: now(),
+          dailyGoalSeconds: settings.dailyGoalMinutes * 60,
+        }),
+        plantTotalSeconds: progress.plantTotalSeconds,
+      };
+    },
+
     async getActive(userId: string): Promise<FocusState> {
       const open = await repo.getOpenSession(userId);
       return state(userId, open ? await persistReconciled(open) : null);
@@ -111,10 +145,11 @@ export function createFocusService(deps: {
           "Ya hay una sesión abierta; reanudala o terminala",
         );
       }
-      if (input.taskId && !(await repo.taskBelongsToUser(userId, input.taskId))) {
+      if (input.taskId && !(await ownsTask(userId, input.taskId))) {
         throw new DomainError("task_not_found", 404, "Tarea no encontrada");
       }
       const p = await repo.getProgress(userId);
+      const settings = await repo.getSettings(userId);
       const expected = nextMode(p.cycleFocusCount, p.lastMode, settings);
       const mode = input.mode ?? expected;
       const session = createSession({

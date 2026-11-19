@@ -1,5 +1,5 @@
-import { ComingSoon } from "@/components/feedback/coming-soon";
+import { GardenView } from "@/features/garden/garden-view";
 
-export default function Page() {
-  return <ComingSoon title="Jardín" phase="Fase 5" />;
+export default function GardenPage() {
+  return <GardenView />;
 }

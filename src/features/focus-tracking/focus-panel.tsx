@@ -1,6 +1,10 @@
 "use client";
 
-import { growthUnits, partialSeconds } from "@/features/garden/growth";
+import { useState } from "react";
+import { useApi } from "@/lib/utils/use-api";
+import type { Task } from "@/features/tasks/types";
+import { growthInfo } from "@/features/garden/growth";
+import { PlantIllustration } from "@/features/garden/plant-illustration";
 import { useFocusSession } from "./use-focus-session";
 import type { FocusMode } from "./types";
 
@@ -23,14 +27,21 @@ function format(total: number) {
 
 export function FocusPanel() {
   const f = useFocusSession();
+  const tasksApi = useApi<{ tasks: Task[] }>("/api/tasks?sort=priority");
+  const [taskId, setTaskId] = useState("");
+  // Si las tareas no cargan, el foco sigue funcionando sin selector.
+  const allTasks = tasksApi.data?.tasks ?? [];
+  const openTasks = allTasks.filter((t) => t.status === "todo" || t.status === "in_progress");
 
   if (f.loading) return <p role="status">Cargando sesión…</p>;
   if (!f.state) return <p role="alert">{f.error ?? "No se pudo cargar el estado."}</p>;
 
   const { session, plantTotalSeconds, nextMode } = f.state;
+  const growth = growthInfo(plantTotalSeconds);
   const finished =
     session && (session.status === "completed" || session.status === "abandoned");
   const mode = f.open && session ? session.mode : nextMode;
+  const currentTask = session?.taskId ? allTasks.find((t) => t.id === session.taskId) : undefined;
 
   const confirmThen = (message: string, action: () => void) => {
     if (window.confirm(message)) action();
@@ -77,6 +88,7 @@ export function FocusPanel() {
           >
             {format(f.remainingSeconds)}
           </p>
+          {currentTask && <p className="text-sm">Tarea: {currentTask.title}</p>}
           <p aria-live="polite" className="text-sm text-muted">
             {f.counting ? "● " : "○ "}
             {stateText}
@@ -130,22 +142,55 @@ export function FocusPanel() {
                 Tiempo acreditado: {format(session.creditedSeconds)} de{" "}
                 {format(session.plannedSeconds)}
               </p>
+              {session.mode === "focus" && (
+                <p className="text-sm text-leaf-strong">
+                  +{Math.floor(session.creditedSeconds / 60)} min de crecimiento para tu
+                  planta
+                </p>
+              )}
             </div>
           )}
           <p className="text-7xl font-semibold tabular-nums text-muted">
             {format(f.state.nextPlannedSeconds)}
           </p>
-          <button className={primary} disabled={!f.online} onClick={() => void f.start()}>
+          {nextMode === "focus" && openTasks.length > 0 && (
+            <label className="flex w-full flex-col gap-1 text-left text-sm">
+              Tarea (opcional)
+              <select
+                value={taskId}
+                onChange={(e) => setTaskId(e.target.value)}
+                className="min-h-12 rounded-lg border border-border bg-surface px-3 text-base"
+              >
+                <option value="">Sin tarea</option>
+                {openTasks.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          <button
+            className={primary}
+            disabled={!f.online}
+            onClick={() => void f.start(nextMode === "focus" ? taskId || null : null)}
+          >
             {finished ? `Siguiente: ${MODE_LABEL[nextMode]}` : "Empezar a estudiar"}
           </button>
         </>
       )}
 
-      <p className="text-sm text-muted">
-        🌱 {growthUnits(plantTotalSeconds)} min de crecimiento (+
-        {partialSeconds(plantTotalSeconds)}
-        /60 s)
-      </p>
+      <div className="flex flex-col items-center gap-1">
+        <PlantIllustration
+          key={`${growth.stage}-${growth.units}`}
+          stage={growth.stage}
+          growing={Boolean(f.counting && session?.mode === "focus")}
+          size={120}
+        />
+        <p className="text-sm text-muted">
+          {growth.name} · {growth.units} min (+{growth.partialSeconds}/60 s)
+        </p>
+      </div>
       <p className="text-xs text-muted">
         El tiempo cuenta solo con la app abierta, visible y en primer plano. No es una
         medida de atención real.

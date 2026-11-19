@@ -1,5 +1,5 @@
-import { ComingSoon } from "@/components/feedback/coming-soon";
+import { DashboardView } from "@/features/history/dashboard-view";
 
 export default function Page() {
-  return <ComingSoon title="Inicio" phase="Fase 6" />;
+  return <DashboardView />;
 }
