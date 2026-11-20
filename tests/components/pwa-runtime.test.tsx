@@ -80,6 +80,24 @@ describe("SwRegister", () => {
     expect(register).not.toHaveBeenCalled();
   });
 
+  it("en desarrollo desregistra un service worker que haya quedado de producción", async () => {
+    // Si alguna vez se corrió `npm start` en el mismo puerto, ese SW sigue sirviendo
+    // /_next/static desde su caché y en `next dev` entrega chunks viejos.
+    vi.stubEnv("NODE_ENV", "development");
+    const unregister = vi.fn().mockResolvedValue(true);
+    const register = vi.fn();
+    Object.defineProperty(navigator, "serviceWorker", {
+      value: {
+        register,
+        getRegistrations: vi.fn().mockResolvedValue([{ unregister }, { unregister }]),
+      },
+      configurable: true,
+    });
+    render(<SwRegister />);
+    await vi.waitFor(() => expect(unregister).toHaveBeenCalledTimes(2));
+    expect(register).not.toHaveBeenCalled();
+  });
+
   it("si el navegador no soporta service workers, no rompe", () => {
     vi.stubEnv("NODE_ENV", "production");
     expect(() => render(<SwRegister />)).not.toThrow();
