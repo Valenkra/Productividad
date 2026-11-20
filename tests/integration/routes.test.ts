@@ -168,7 +168,11 @@ describe("garden / settings / stats", () => {
     const id = await startSession();
     ctx.advance(20);
     await heartbeat.POST(req({ idempotencyKey: "clave-0001" }), params(id));
-    expect(await (await garden.GET()).json()).toEqual({ plantTotalSeconds: 20 });
+    // Sesión sin completar: suma al total pero aún no es una planta del jardín.
+    expect(await (await garden.GET()).json()).toEqual({
+      plantTotalSeconds: 20,
+      plants: [],
+    });
   });
 
   it("settings: lee, actualiza parcialmente y rechaza valores fuera de rango", async () => {
@@ -181,6 +185,33 @@ describe("garden / settings / stats", () => {
     expect(await ok.json()).toMatchObject({ focusMinutes: 40, shortBreakMinutes: 5 });
     expect((await patch({ focusMinutes: 0 })).status).toBe(400);
     expect((await (await settings.GET()).json()).focusMinutes).toBe(40);
+  });
+
+  it("settings: guarda preferencias, nombre y onboarding sin pisar lo demás", async () => {
+    const patch = (b: unknown) =>
+      settings.PATCH(
+        new Request("http://x", { method: "PATCH", body: JSON.stringify(b) }),
+      );
+    const ok = await patch({
+      autoStartBreak: false,
+      sound: false,
+      displayName: "Vale",
+      onboardingDone: true,
+    });
+    expect(await ok.json()).toMatchObject({
+      autoStartBreak: false,
+      sound: false,
+      displayName: "Vale",
+      onboardingDone: true,
+      focusMinutes: 25,
+    });
+    await patch({ focusMinutes: 30 });
+    expect(await (await settings.GET()).json()).toMatchObject({
+      displayName: "Vale",
+      autoStartBreak: false,
+      focusMinutes: 30,
+    });
+    expect((await patch({ displayName: "x".repeat(41) })).status).toBe(400);
   });
 
   it("stats: usa ?tz, valida la zona y por defecto UTC", async () => {

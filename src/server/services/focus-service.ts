@@ -11,6 +11,7 @@ import {
 import type { FocusMode, FocusSession } from "@/features/focus-tracking/types";
 import { nextMode, plannedSecondsFor } from "@/features/pomodoro/sequence";
 import { computeStats, isValidTimeZone } from "@/features/history/stats";
+import { gardenPlants, type GardenPlant, type TaskInfo } from "@/features/garden/plants";
 import type { UserSettings } from "@/features/settings/schema";
 import type { FocusRepository, UserProgress } from "../repositories/focus-repository";
 
@@ -21,6 +22,8 @@ export interface FocusState {
   plantTotalSeconds: number;
   nextMode: FocusMode;
   nextPlannedSeconds: number;
+  /** Focos completados desde el último descanso largo. */
+  cycleFocusCount: number;
   /** Hora del servidor, para que el cliente calcule su desfase. */
   serverNow: number;
 }
@@ -38,6 +41,8 @@ export function createFocusService(deps: {
   newId?: () => string;
   /** ¿La tarea existe y es del usuario? Si no se inyecta, ninguna tarea es válida. */
   ownsTask?: (userId: string, taskId: string) => Promise<boolean>;
+  /** Título y materia de las tareas del usuario, para las plantas del jardín. */
+  describeTasks?: (userId: string) => Promise<Map<string, TaskInfo>>;
 }) {
   const { repo } = deps;
   const ownsTask = deps.ownsTask ?? (async () => false);
@@ -87,15 +92,25 @@ export function createFocusService(deps: {
       plantTotalSeconds: p.plantTotalSeconds,
       nextMode: next,
       nextPlannedSeconds: plannedSecondsFor(next, settings),
+      cycleFocusCount: p.cycleFocusCount,
       serverNow: now(),
     };
   }
 
   return {
-    /** Total de segundos válidos de la planta; etapa y progreso se derivan en `growth.ts`. */
-    async getGarden(userId: string): Promise<{ plantTotalSeconds: number }> {
-      const p = await repo.getProgress(userId);
-      return { plantTotalSeconds: p.plantTotalSeconds };
+    /** Jardín: una planta por foco completado, más el total histórico de segundos válidos. */
+    async getGarden(
+      userId: string,
+    ): Promise<{ plantTotalSeconds: number; plants: GardenPlant[] }> {
+      const [p, sessions, tasks] = await Promise.all([
+        repo.getProgress(userId),
+        repo.listSessions(userId),
+        deps.describeTasks?.(userId) ?? Promise.resolve(new Map<string, TaskInfo>()),
+      ]);
+      return {
+        plantTotalSeconds: p.plantTotalSeconds,
+        plants: gardenPlants(sessions, tasks),
+      };
     },
 
     getSettings: (userId: string): Promise<UserSettings> => repo.getSettings(userId),

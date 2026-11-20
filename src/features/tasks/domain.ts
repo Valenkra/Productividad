@@ -1,4 +1,5 @@
 import type { CreateTaskInput, ListQuery, TaskSort, UpdateTaskInput } from "./schema";
+import type { FocusSession } from "@/features/focus-tracking/types";
 import type { Task, TaskPriority } from "./types";
 
 const PRIORITY_RANK: Record<TaskPriority, number> = { high: 0, medium: 1, low: 2 };
@@ -78,4 +79,15 @@ export function nextTask(tasks: Task[]): Task | null {
 export function isOverdue(task: Task, now: number): boolean {
   const open = task.status === "todo" || task.status === "in_progress";
   return open && task.dueAt !== null && now > task.dueAt;
+}
+
+/** Pomodoros completados por tarea: focos terminados con éxito (no abandonados, no descansos). */
+export function completedFocusByTask(sessions: FocusSession[]): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const s of sessions) {
+    if (s.mode === "focus" && s.status === "completed" && s.taskId) {
+      counts.set(s.taskId, (counts.get(s.taskId) ?? 0) + 1);
+    }
+  }
+  return counts;
 }

@@ -1,57 +1,47 @@
 "use client";
 
-import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { dateInputToMs, msToDateInput } from "@/lib/time/format";
-import { isOverdue } from "./domain";
-import type { Task, TaskPriority, TaskStatus } from "./types";
+import { Check, Play, Plus } from "lucide-react";
+import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
+import { card, focusRing } from "@/components/ui/styles";
+import type { UserSettings } from "@/features/settings/schema";
+import { useApi } from "@/lib/utils/use-api";
+import { countDueToday, dueLabel } from "./due";
+import { subjectOf } from "./subjects";
+import { TaskSheet } from "./task-sheet";
+import type { TaskPriority, TaskWithProgress } from "./types";
 
-const PRIORITY_LABEL: Record<TaskPriority, string> = {
-  low: "baja",
-  medium: "media",
-  high: "alta",
+const PRIORITY: Record<TaskPriority, { label: string; dot: string }> = {
+  low: { label: "baja", dot: "bg-prio-low" },
+  medium: { label: "media", dot: "bg-prio-medium" },
+  high: { label: "alta", dot: "bg-prio-high" },
 };
 
-const input =
-  "min-h-12 rounded-2xl border border-border bg-surface px-4 text-base focus-visible:outline-2 focus-visible:outline-leaf-strong";
-const button =
-  "min-h-11 rounded-full border border-border bg-surface px-4 text-sm hover:bg-background focus-visible:outline-2 focus-visible:outline-leaf-strong";
+const isOpen = (t: TaskWithProgress) => t.status === "todo" || t.status === "in_progress";
 
-async function request(url: string, method: string, body?: unknown): Promise<void> {
-  const res = await fetch(url, {
-    method,
-    headers: { "Content-Type": "application/json" },
-    body: body === undefined ? undefined : JSON.stringify(body),
-  });
-  if (!res.ok) throw new Error(`Error ${res.status}`);
-}
+type Sheet = { task: TaskWithProgress | null } | null;
 
 export function TasksView() {
-  const [status, setStatus] = useState("");
-  const [priority, setPriority] = useState("");
-  const [sort, setSort] = useState("manual");
-  const [tasks, setTasks] = useState<Task[] | null>(null);
+  const [tasks, setTasks] = useState<TaskWithProgress[] | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [version, setVersion] = useState(0);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [sheet, setSheet] = useState<Sheet>(null);
   // "Ahora" se fija al recibir los datos (en el cliente): Date.now() en el render rompe el prerender.
   const [now, setNow] = useState(0);
-
-  const params = new URLSearchParams({ sort });
-  if (status) params.set("status", status);
-  if (priority) params.set("priority", priority);
-  const query = params.toString();
+  const settings = useApi<UserSettings>("/api/settings");
+  const focusMinutes = settings.data?.focusMinutes ?? 25;
 
   useEffect(() => {
     let cancelled = false;
-    fetch(`/api/tasks?${query}`, { cache: "no-store" })
+    fetch("/api/tasks?status=all", { cache: "no-store" })
       .then(async (res) => {
         if (!res.ok) throw new Error();
-        return (await res.json()) as { tasks: Task[] };
+        return (await res.json()) as { tasks: TaskWithProgress[] };
       })
       .then((body) => {
         if (cancelled) return;
-        setTasks(body.tasks);
+        setTasks(body.tasks.filter((t) => t.status !== "archived"));
         setNow(Date.now());
         setLoadError(false);
       })
@@ -59,19 +49,25 @@ export function TasksView() {
     return () => {
       cancelled = true;
     };
-  }, [query, version]);
+  }, [version]);
 
-  const mutate = useCallback(async (fn: () => Promise<void>): Promise<boolean> => {
+  const reload = useCallback(() => setVersion((v) => v + 1), []);
+  const closeSheet = useCallback(() => setSheet(null), []);
+
+  async function toggle(task: TaskWithProgress) {
     try {
-      await fn();
+      const res = await fetch(`/api/tasks/${task.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: isOpen(task) ? "done" : "todo" }),
+      });
+      if (!res.ok) throw new Error();
       setActionError(null);
-      setVersion((v) => v + 1);
-      return true;
+      reload();
     } catch {
-      setActionError("No se pudo guardar el cambio. Probá de nuevo.");
-      return false;
+      setActionError("No se pudo guardar el cambio. Prueba de nuevo.");
     }
-  }, []);
+  }
 
   if (tasks === null) {
     return loadError ? (
@@ -81,336 +77,159 @@ export function TasksView() {
     );
   }
 
-  const filtered = status !== "" || priority !== "";
+  const open = tasks.filter(isOpen);
+  const finished = tasks.filter((t) => t.status === "done");
 
   return (
-    <section className="mx-auto flex max-w-2xl flex-col gap-5">
-      <h1 className="font-display text-3xl font-semibold tracking-tight">Tareas</h1>
-
-      <NewTaskForm
-        onCreate={(body) => mutate(() => request("/api/tasks", "POST", body))}
-      />
-
-      <div className="grid grid-cols-3 gap-2 text-sm">
-        <label className="flex flex-col gap-1">
-          Estado
-          <select
-            aria-label="Filtrar por estado"
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            className={input}
-          >
-            <option value="">Activas</option>
-            <option value="todo">Pendientes</option>
-            <option value="in_progress">En curso</option>
-            <option value="done">Hechas</option>
-            <option value="archived">Archivadas</option>
-            <option value="all">Todas</option>
-          </select>
-        </label>
-        <label className="flex flex-col gap-1">
-          Prioridad
-          <select
-            aria-label="Filtrar por prioridad"
-            value={priority}
-            onChange={(e) => setPriority(e.target.value)}
-            className={input}
-          >
-            <option value="">Todas</option>
-            <option value="high">Alta</option>
-            <option value="medium">Media</option>
-            <option value="low">Baja</option>
-          </select>
-        </label>
-        <label className="flex flex-col gap-1">
-          Orden
-          <select
-            aria-label="Ordenar por"
-            value={sort}
-            onChange={(e) => setSort(e.target.value)}
-            className={input}
-          >
-            <option value="manual">Manual</option>
-            <option value="due">Fecha límite</option>
-            <option value="priority">Prioridad</option>
-            <option value="created">Más nuevas</option>
-          </select>
-        </label>
-      </div>
+    <section className="flex flex-col gap-4">
+      <header>
+        <p className="text-sm font-medium text-muted">
+          {`${countDueToday(tasks, now)} para hoy · ${open.length} pendientes`}
+        </p>
+        <h1 className="text-[30px] font-semibold leading-tight">Tareas</h1>
+      </header>
 
       {actionError && (
-        <p role="alert" className="text-sm text-soil">
+        <p role="alert" className="text-sm font-medium text-danger">
           {actionError}
         </p>
       )}
 
-      {tasks.length === 0 ? (
-        <p className="text-sm text-muted">
-          {filtered
-            ? "No hay tareas con estos filtros."
-            : "Todavía no tenés tareas. Agregá la primera arriba."}
+      {open.length === 0 ? (
+        <p className="rounded-[22px] bg-mint p-5 font-medium">
+          ¡Todo hecho! Añade algo nuevo o date un respiro.
         </p>
       ) : (
-        <ul aria-label="Tareas" className="flex flex-col gap-2">
-          {tasks.map((task) =>
-            editingId === task.id ? (
-              <EditRow
-                key={task.id}
-                task={task}
-                onCancel={() => setEditingId(null)}
-                onSave={async (patch) => {
-                  if (
-                    await mutate(() => request(`/api/tasks/${task.id}`, "PATCH", patch))
-                  ) {
-                    setEditingId(null);
-                  }
-                }}
-              />
-            ) : (
+        <ul aria-label="Tareas pendientes" className="flex flex-col gap-3">
+          {open.map((t) => {
+            const subject = subjectOf(t.subject);
+            const filled = Math.min(t.completedPomodoros, t.estimatedPomodoros);
+            return (
               <li
-                key={task.id}
-                data-title={task.title}
-                className="flex flex-col gap-2 rounded-3xl border border-border bg-surface p-4"
+                key={t.id}
+                data-title={t.title}
+                className={`${card} flex items-center gap-3 p-3`}
               >
-                <div className="flex items-start gap-3">
-                  <input
-                    type="checkbox"
-                    className="mt-1 h-6 w-6"
-                    aria-label={`Marcar como hecha: ${task.title}`}
-                    checked={task.status === "done"}
-                    onChange={(e) =>
-                      mutate(() =>
-                        request(`/api/tasks/${task.id}`, "PATCH", {
-                          status: e.target.checked ? "done" : "todo",
-                        }),
-                      )
-                    }
-                  />
-                  <div className="flex-1">
-                    <p
-                      className={task.status === "done" ? "line-through" : "font-medium"}
-                    >
-                      {task.title}
-                    </p>
-                    <p className="text-sm text-muted">
-                      Prioridad {PRIORITY_LABEL[task.priority]}
-                      {task.dueAt !== null &&
-                        ` · Vence ${new Intl.DateTimeFormat("es", { dateStyle: "medium" }).format(task.dueAt)}`}
-                      {isOverdue(task, now) && " · ⚠ Vencida"}
-                      {task.status === "archived" && " · Archivada"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    className={button}
-                    aria-label={`Editar ${task.title}`}
-                    onClick={() => setEditingId(task.id)}
-                  >
-                    Editar
-                  </button>
-                  <ArchiveButton task={task} mutate={mutate} />
-                  <button
-                    className={button}
-                    aria-label={`Eliminar ${task.title}`}
-                    onClick={() => {
-                      if (window.confirm(`¿Eliminar «${task.title}»?`)) {
-                        void mutate(() => request(`/api/tasks/${task.id}`, "DELETE"));
-                      }
-                    }}
-                  >
-                    Eliminar
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  role="checkbox"
+                  aria-checked={false}
+                  aria-label={`Completar ${t.title}`}
+                  onClick={() => void toggle(t)}
+                  className={`size-[30px] shrink-0 rounded-[10px] border-[1.5px] border-ink bg-white transition-colors hover:bg-mint ${focusRing}`}
+                />
+                <button
+                  type="button"
+                  aria-label={`Editar ${t.title}`}
+                  onClick={() => setSheet({ task: t })}
+                  className={`min-w-0 flex-1 text-left ${focusRing}`}
+                >
+                  <span className="block truncate text-base font-medium">{t.title}</span>
+                  <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                    {subject && (
+                      <span
+                        className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${subject.bg}`}
+                      >
+                        {subject.name}
+                      </span>
+                    )}
+                    <span className="flex items-center gap-1 text-xs text-muted">
+                      <span
+                        aria-hidden="true"
+                        className={`size-2 rounded-full ${PRIORITY[t.priority].dot}`}
+                      />
+                      <span className="sr-only">
+                        {`Prioridad ${PRIORITY[t.priority].label}`}
+                      </span>
+                      <span>{dueLabel(t.dueAt, now)}</span>
+                    </span>
+                    <span className="flex gap-1" aria-hidden="true">
+                      {Array.from({ length: t.estimatedPomodoros }, (_, i) => (
+                        <span
+                          key={i}
+                          className={`size-2.5 rounded-full border-[1.5px] border-accent ${
+                            i < filled ? "bg-accent" : ""
+                          }`}
+                        />
+                      ))}
+                    </span>
+                    <span className="sr-only">
+                      {`${t.completedPomodoros} de ${t.estimatedPomodoros} pomodoros`}
+                    </span>
+                  </span>
+                </button>
+                <Link
+                  href={`/focus?task=${t.id}`}
+                  aria-label={`Estudiar ${t.title}`}
+                  className={`grid size-11 shrink-0 place-items-center rounded-full bg-accent text-white transition-colors hover:bg-accent-hover ${focusRing}`}
+                >
+                  <Play size={20} fill="currentColor" aria-hidden="true" />
+                </Link>
               </li>
-            ),
-          )}
+            );
+          })}
         </ul>
       )}
-    </section>
-  );
-}
 
-function ArchiveButton({
-  task,
-  mutate,
-}: {
-  task: Task;
-  mutate: (fn: () => Promise<void>) => Promise<boolean>;
-}) {
-  const archived = task.status === "archived";
-  const next: TaskStatus = archived ? "todo" : "archived";
-  return (
-    <button
-      className={button}
-      aria-label={`${archived ? "Desarchivar" : "Archivar"} ${task.title}`}
-      onClick={() =>
-        mutate(() => request(`/api/tasks/${task.id}`, "PATCH", { status: next }))
-      }
-    >
-      {archived ? "Desarchivar" : "Archivar"}
-    </button>
-  );
-}
-
-function NewTaskForm({
-  onCreate,
-}: {
-  onCreate: (body: {
-    title: string;
-    priority: TaskPriority;
-    dueAt: number | null;
-  }) => Promise<boolean>;
-}) {
-  const [title, setTitle] = useState("");
-  const [priority, setPriority] = useState<TaskPriority>("medium");
-  const [due, setDue] = useState("");
-  const [error, setError] = useState<string | null>(null);
-
-  async function submit(e: FormEvent) {
-    e.preventDefault();
-    if (!title.trim()) {
-      setError("Escribí un título para la tarea.");
-      return;
-    }
-    setError(null);
-    if (await onCreate({ title: title.trim(), priority, dueAt: dateInputToMs(due) })) {
-      setTitle("");
-      setDue("");
-      setPriority("medium");
-    }
-  }
-
-  return (
-    <form
-      noValidate
-      onSubmit={submit}
-      className="flex flex-col gap-2 rounded-3xl border border-border bg-surface p-4"
-    >
-      <label className="flex flex-col gap-1 text-sm">
-        Nueva tarea
-        <input
-          className={input}
-          value={title}
-          maxLength={200}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-      </label>
-      <div className="grid grid-cols-2 gap-2 text-sm">
-        <label className="flex flex-col gap-1">
-          Prioridad
-          <select
-            aria-label="Prioridad de la nueva tarea"
-            className={input}
-            value={priority}
-            onChange={(e) => setPriority(e.target.value as TaskPriority)}
-          >
-            <option value="low">Baja</option>
-            <option value="medium">Media</option>
-            <option value="high">Alta</option>
-          </select>
-        </label>
-        <label className="flex flex-col gap-1">
-          Fecha límite
-          <input
-            type="date"
-            className={input}
-            value={due}
-            onChange={(e) => setDue(e.target.value)}
-          />
-        </label>
-      </div>
-      {error && (
-        <p role="alert" className="text-sm text-soil">
-          {error}
-        </p>
+      {finished.length > 0 && (
+        <>
+          <h2 className="mt-2 text-base font-semibold text-muted">Hechas</h2>
+          <ul aria-label="Tareas hechas" className="flex flex-col gap-2">
+            {finished.map((t) => (
+              <li
+                key={t.id}
+                data-title={t.title}
+                className="flex items-center gap-3 rounded-[22px] bg-[#fbe9db] p-3"
+              >
+                <button
+                  type="button"
+                  role="checkbox"
+                  aria-checked
+                  aria-label={`Reabrir ${t.title}`}
+                  onClick={() => void toggle(t)}
+                  className={`grid size-[30px] shrink-0 place-items-center rounded-[10px] border-[1.5px] border-ink bg-[#7fcf9f] ${focusRing}`}
+                >
+                  <Check size={18} strokeWidth={3} aria-hidden="true" />
+                </button>
+                <span className="min-w-0 flex-1 truncate text-base font-medium text-[#8a7598] line-through">
+                  {t.title}
+                </span>
+                <span className="text-sm text-[#8a7598]">
+                  {`${t.completedPomodoros}/${t.estimatedPomodoros}`}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
-      <button
-        type="submit"
-        className="min-h-12 rounded-full bg-leaf-strong px-6 text-base font-medium text-white hover:bg-leaf"
-      >
-        Agregar
-      </button>
-    </form>
-  );
-}
 
-function EditRow({
-  task,
-  onSave,
-  onCancel,
-}: {
-  task: Task;
-  onSave: (patch: {
-    title: string;
-    priority: TaskPriority;
-    dueAt: number | null;
-  }) => Promise<void>;
-  onCancel: () => void;
-}) {
-  const [title, setTitle] = useState(task.title);
-  const [priority, setPriority] = useState<TaskPriority>(task.priority);
-  const [due, setDue] = useState(msToDateInput(task.dueAt));
-  const [error, setError] = useState<string | null>(null);
-
-  return (
-    <li
-      data-title={task.title}
-      className="flex flex-col gap-2 rounded-3xl border border-leaf bg-surface p-4"
-    >
-      <label className="flex flex-col gap-1 text-sm">
-        Título
-        <input
-          className={input}
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-      </label>
-      <div className="grid grid-cols-2 gap-2 text-sm">
-        <label className="flex flex-col gap-1">
-          Prioridad
-          <select
-            className={input}
-            value={priority}
-            onChange={(e) => setPriority(e.target.value as TaskPriority)}
-          >
-            <option value="low">Baja</option>
-            <option value="medium">Media</option>
-            <option value="high">Alta</option>
-          </select>
-        </label>
-        <label className="flex flex-col gap-1">
-          Fecha límite
-          <input
-            type="date"
-            className={input}
-            value={due}
-            onChange={(e) => setDue(e.target.value)}
-          />
-        </label>
-      </div>
-      {error && (
-        <p role="alert" className="text-sm text-soil">
-          {error}
-        </p>
-      )}
-      <div className="flex gap-2">
+      <div className="pointer-events-none fixed inset-x-0 bottom-[104px] z-10 mx-auto max-w-md">
         <button
-          className="min-h-11 rounded-full bg-leaf-strong px-5 text-sm font-medium text-white hover:bg-leaf"
-          onClick={() => {
-            if (!title.trim()) {
-              setError("El título no puede quedar vacío.");
-              return;
-            }
-            void onSave({ title: title.trim(), priority, dueAt: dateInputToMs(due) });
-          }}
+          type="button"
+          aria-label="Añadir tarea"
+          onClick={() => setSheet({ task: null })}
+          className={`pointer-events-auto ml-auto mr-5 grid size-16 place-items-center rounded-[22px] border-[1.5px] border-ink bg-accent text-white shadow-[0_4px_0_var(--ink)] transition-[transform,box-shadow] active:translate-y-1 active:shadow-[0_0_0_var(--ink)] ${focusRing}`}
         >
-          Guardar
-        </button>
-        <button className={button} onClick={onCancel}>
-          Cancelar
+          <Plus size={30} strokeWidth={2.6} aria-hidden="true" />
         </button>
       </div>
-    </li>
+
+      {sheet && (
+        <TaskSheet
+          task={sheet.task}
+          focusMinutes={focusMinutes}
+          now={now}
+          onClose={closeSheet}
+          onSaved={() => {
+            setSheet(null);
+            reload();
+          }}
+          onDeleted={() => {
+            setSheet(null);
+            reload();
+          }}
+        />
+      )}
+    </section>
   );
 }

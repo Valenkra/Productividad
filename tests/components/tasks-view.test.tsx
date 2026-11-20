@@ -8,8 +8,17 @@ import {
   within,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { dueAtFor } from "@/features/tasks/due";
 import { TasksView } from "@/features/tasks/tasks-view";
 import { createTestService, installFakeApi, type FakeApi } from "../helpers/fake-api";
+
+vi.mock("next/link", () => ({
+  default: ({ href, children, ...rest }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...rest}>
+      {children}
+    </a>
+  ),
+}));
 
 let ctx: ReturnType<typeof createTestService>;
 let api: FakeApi;
@@ -18,16 +27,19 @@ const seed = (title: string, over: Record<string, unknown> = {}) =>
   ctx.tasks.create("u", {
     title,
     description: null,
+    subject: null,
+    estimatedPomodoros: 2,
     priority: "medium",
     dueAt: null,
     ...over,
   });
-const list = () => screen.getByRole("list", { name: "Tareas" });
-const titles = () =>
-  within(list())
+const pending = () => screen.getByRole("list", { name: "Tareas pendientes" });
+const done = () => screen.getByRole("list", { name: "Tareas hechas" });
+const pendingTitles = () =>
+  within(pending())
     .getAllByRole("listitem")
     .map((li) => li.getAttribute("data-title"));
-const mutations = () => api.calls.filter((c) => c.method !== "GET");
+const writes = () => api.calls.filter((c) => c.method !== "GET");
 
 beforeEach(() => {
   ctx = createTestService();
@@ -36,33 +48,58 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
 });
 
 describe("TasksView: estados", () => {
-  it("estado vacío invita a crear la primera tarea", async () => {
+  it("sin tareas muestra la tarjeta de «todo hecho»", async () => {
     render(<TasksView />);
-    expect(await screen.findByText(/Todavía no tenés tareas/)).toBeTruthy();
+    expect(
+      await screen.findByText("¡Todo hecho! Añade algo nuevo o date un respiro."),
+    ).toBeTruthy();
+    expect(screen.getByText("0 para hoy · 0 pendientes")).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Tareas" })).toBeTruthy();
   });
 
-  it("lista las tareas con prioridad escrita (no solo color) y fecha", async () => {
-    await seed("Resumen", { priority: "high", dueAt: Date.UTC(2099, 0, 5, 12) });
+  it("cuenta las de hoy y las pendientes en el subtítulo", async () => {
+    await seed("Hoy", { dueAt: dueAtFor("today", Date.now()) });
+    await seed("Sin fecha");
+    const hecha = await seed("Hecha");
+    await ctx.tasks.update("u", hecha.id, { status: "done" });
     render(<TasksView />);
-    const item = await screen.findByRole("listitem");
-    expect(within(item).getByText("Resumen")).toBeTruthy();
-    expect(within(item).getByText(/Prioridad alta/)).toBeTruthy();
-    expect(within(item).getByText(/Vence/)).toBeTruthy();
+    expect(await screen.findByText("1 para hoy · 2 pendientes")).toBeTruthy();
   });
 
-  it("marca como vencida una tarea abierta con fecha pasada", async () => {
-    await seed("Atrasada", { dueAt: Date.UTC(2000, 0, 1) });
+  it("cada tarjeta muestra materia, prioridad escrita, fecha y pomodoros", async () => {
+    await seed("Resumen", {
+      subject: "historia",
+      priority: "high",
+      estimatedPomodoros: 4,
+      dueAt: dueAtFor("tomorrow", Date.now()),
+    });
     render(<TasksView />);
-    expect(await screen.findByText(/Vencida/)).toBeTruthy();
+    const card = await screen.findByRole("listitem");
+    expect(within(card).getByText("Resumen")).toBeTruthy();
+    expect(within(card).getByText("Historia")).toBeTruthy();
+    expect(within(card).getByText("Prioridad alta")).toBeTruthy();
+    expect(within(card).getByText("Mañana")).toBeTruthy();
+    expect(within(card).getByText("0 de 4 pomodoros")).toBeTruthy();
   });
 
-  it("muestra el error si la lista no carga", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async () => new Response("{}", { status: 500 })),
+  it("las archivadas no aparecen", async () => {
+    const a = await seed("Archivada");
+    await ctx.tasks.update("u", a.id, { status: "archived" });
+    await seed("Visible");
+    render(<TasksView />);
+    await screen.findByText("Visible");
+    expect(screen.queryByText("Archivada")).toBeNull();
+  });
+
+  it("si la lista no carga muestra el error", async () => {
+    // Solo falla la lista de tareas (los ajustes cargan aparte).
+    const real = globalThis.fetch;
+    vi.stubGlobal("fetch", (url: string, init?: RequestInit) =>
+      url.startsWith("/api/tasks") ? Promise.reject(new TypeError("x")) : real(url, init),
     );
     render(<TasksView />);
     expect((await screen.findByRole("alert")).textContent).toMatch(
@@ -71,178 +108,83 @@ describe("TasksView: estados", () => {
   });
 });
 
-describe("TasksView: crear", () => {
-  it("crea una tarea con prioridad y fecha, y aparece en la lista", async () => {
+describe("TasksView: acciones", () => {
+  it("la casilla completa la tarea y pasa a «Hechas» con su avance", async () => {
+    await seed("Leer");
     render(<TasksView />);
-    await screen.findByText(/Todavía no tenés tareas/);
-    fireEvent.change(screen.getByLabelText("Nueva tarea"), {
-      target: { value: "Estudiar física" },
-    });
-    fireEvent.change(screen.getByLabelText("Prioridad de la nueva tarea"), {
-      target: { value: "high" },
-    });
-    fireEvent.change(screen.getByLabelText("Fecha límite"), {
-      target: { value: "2099-06-01" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Agregar" }));
-
-    await waitFor(() => expect(titles()).toEqual(["Estudiar física"]));
-    expect(mutations()[0]).toMatchObject({ method: "POST", url: "/api/tasks" });
-    expect(mutations()[0].body).toMatchObject({
-      title: "Estudiar física",
-      priority: "high",
-    });
-    expect(typeof (mutations()[0].body as { dueAt: number }).dueAt).toBe("number");
-    expect((screen.getByLabelText("Nueva tarea") as HTMLInputElement).value).toBe("");
+    fireEvent.click(await screen.findByRole("checkbox", { name: "Completar Leer" }));
+    await waitFor(() => expect(within(done()).getByText("Leer")).toBeTruthy());
+    expect(writes()[0]).toMatchObject({ method: "PATCH", body: { status: "done" } });
+    expect(within(done()).getByText("0/2")).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Hechas" })).toBeTruthy();
   });
 
-  it("título vacío: avisa y no envía nada", async () => {
+  it("una hecha se puede reabrir", async () => {
+    const t = await seed("Leer");
+    await ctx.tasks.update("u", t.id, { status: "done" });
     render(<TasksView />);
-    await screen.findByText(/Todavía no tenés tareas/);
-    fireEvent.change(screen.getByLabelText("Nueva tarea"), { target: { value: "   " } });
-    fireEvent.click(screen.getByRole("button", { name: "Agregar" }));
-    expect((await screen.findByRole("alert")).textContent).toMatch(/título/);
-    expect(mutations()).toHaveLength(0);
-  });
-});
-
-describe("TasksView: completar, archivar, eliminar", () => {
-  it("el checkbox completa y reabre la tarea", async () => {
-    await seed("A");
-    render(<TasksView />);
-    const box = (await screen.findByRole("checkbox", {
-      name: /Marcar como hecha: A/,
-    })) as HTMLInputElement;
-    fireEvent.click(box);
-    await waitFor(() => expect(mutations()[0].body).toEqual({ status: "done" }));
-    await waitFor(() =>
-      expect(
-        (
-          screen.getByRole("checkbox", {
-            name: /Marcar como hecha: A/,
-          }) as HTMLInputElement
-        ).checked,
-      ).toBe(true),
-    );
-    fireEvent.click(screen.getByRole("checkbox", { name: /Marcar como hecha: A/ }));
-    await waitFor(() => expect(mutations()[1].body).toEqual({ status: "todo" }));
+    fireEvent.click(await screen.findByRole("checkbox", { name: "Reabrir Leer" }));
+    await waitFor(() => expect(pendingTitles()).toEqual(["Leer"]));
+    expect(writes()[0]).toMatchObject({ body: { status: "todo" } });
   });
 
-  it("archivar la saca de la lista por defecto", async () => {
-    await seed("A");
-    await seed("B");
+  it("el botón de play lleva a Foco con la tarea elegida", async () => {
+    const t = await seed("Leer");
     render(<TasksView />);
-    await screen.findByText("A");
-    fireEvent.click(screen.getAllByRole("button", { name: /^Archivar/ })[0]);
-    await waitFor(() => expect(titles()).toEqual(["B"]));
-    expect(mutations()[0].body).toEqual({ status: "archived" });
-  });
-
-  it("eliminar pide confirmación", async () => {
-    await seed("A");
-    render(<TasksView />);
-    await screen.findByText("A");
-    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
-    fireEvent.click(screen.getByRole("button", { name: /^Eliminar/ }));
-    expect(confirm).toHaveBeenCalled();
-    expect(mutations()).toHaveLength(0);
-
-    confirm.mockReturnValue(true);
-    fireEvent.click(screen.getByRole("button", { name: /^Eliminar/ }));
-    await screen.findByText(/Todavía no tenés tareas/);
-    expect(mutations()[0]).toMatchObject({ method: "DELETE" });
+    const play = await screen.findByRole("link", { name: "Estudiar Leer" });
+    expect(play.getAttribute("href")).toBe(`/focus?task=${t.id}`);
   });
 
   it("si el servidor falla al guardar, informa y no rompe la lista", async () => {
-    await seed("A");
+    await seed("Leer");
     render(<TasksView />);
-    await screen.findByText("A");
+    const box = await screen.findByRole("checkbox", { name: "Completar Leer" });
     api.failNext(1);
-    fireEvent.click(screen.getByRole("checkbox", { name: /Marcar como hecha: A/ }));
+    fireEvent.click(box);
     expect((await screen.findByRole("alert")).textContent).toMatch(/No se pudo guardar/);
-    expect(titles()).toEqual(["A"]);
+    expect(pendingTitles()).toEqual(["Leer"]);
   });
 });
 
-describe("TasksView: editar", () => {
-  it("edita el título y la prioridad", async () => {
-    await seed("Viejo");
+describe("TasksView: hoja de edición", () => {
+  it("el botón flotante abre «Nueva tarea» y al guardar aparece en la lista", async () => {
     render(<TasksView />);
-    await screen.findByText("Viejo");
-    fireEvent.click(screen.getByRole("button", { name: /^Editar/ }));
-    const row = within(screen.getByRole("listitem"));
-    fireEvent.change(row.getByLabelText("Título"), { target: { value: "Nuevo" } });
-    fireEvent.change(row.getByLabelText("Prioridad"), { target: { value: "low" } });
-    fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
-    await waitFor(() => expect(titles()).toEqual(["Nuevo"]));
-    expect(mutations()[0].body).toMatchObject({ title: "Nuevo", priority: "low" });
+    fireEvent.click(await screen.findByRole("button", { name: "Añadir tarea" }));
+    const dialog = screen.getByRole("dialog", { name: "Nueva tarea" });
+    fireEvent.change(within(dialog).getByLabelText("Título"), {
+      target: { value: "Entregar informe" },
+    });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Guardar" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    await waitFor(() => expect(pendingTitles()).toEqual(["Entregar informe"]));
   });
 
-  it("cancelar no envía cambios", async () => {
-    await seed("A");
+  it("tocar una tarjeta abre «Editar tarea» y guarda los cambios", async () => {
+    await seed("Antes");
     render(<TasksView />);
-    await screen.findByText("A");
-    fireEvent.click(screen.getByRole("button", { name: /^Editar/ }));
-    fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
-    expect(mutations()).toHaveLength(0);
-    expect(screen.queryByLabelText("Título")).toBeNull();
+    fireEvent.click(await screen.findByRole("button", { name: "Editar Antes" }));
+    const dialog = screen.getByRole("dialog", { name: "Editar tarea" });
+    fireEvent.change(within(dialog).getByLabelText("Título"), {
+      target: { value: "Después" },
+    });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Guardar" }));
+    await waitFor(() => expect(pendingTitles()).toEqual(["Después"]));
   });
 
-  it("no permite guardar un título vacío", async () => {
-    await seed("A");
+  it("eliminar desde la hoja la quita de la lista", async () => {
+    await seed("Borrar");
+    vi.spyOn(window, "confirm").mockReturnValue(true);
     render(<TasksView />);
-    await screen.findByText("A");
-    fireEvent.click(screen.getByRole("button", { name: /^Editar/ }));
-    fireEvent.change(screen.getByLabelText("Título"), { target: { value: "" } });
-    fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
-    expect((await screen.findByRole("alert")).textContent).toMatch(/título/);
-    expect(mutations()).toHaveLength(0);
-  });
-});
-
-describe("TasksView: filtros y orden", () => {
-  it("filtra por prioridad y estado enviando la consulta al servidor", async () => {
-    await seed("baja", { priority: "low" });
-    await seed("alta", { priority: "high" });
-    render(<TasksView />);
-    await screen.findByText("alta");
-    fireEvent.change(screen.getByLabelText("Filtrar por prioridad"), {
-      target: { value: "high" },
-    });
-    await waitFor(() => expect(titles()).toEqual(["alta"]));
-    expect(api.calls.at(-1)!.url).toContain("priority=high");
-
-    fireEvent.change(screen.getByLabelText("Filtrar por prioridad"), {
-      target: { value: "" },
-    });
-    fireEvent.change(screen.getByLabelText("Filtrar por estado"), {
-      target: { value: "done" },
-    });
-    await screen.findByText(/No hay tareas con estos filtros/);
-    expect(api.calls.at(-1)!.url).toContain("status=done");
+    fireEvent.click(await screen.findByRole("button", { name: "Editar Borrar" }));
+    fireEvent.click(screen.getByRole("button", { name: "Eliminar tarea" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    await waitFor(() => expect(screen.queryByText("Borrar")).toBeNull());
   });
 
-  it("ordena por prioridad", async () => {
-    await seed("baja", { priority: "low" });
-    await seed("alta", { priority: "high" });
+  it("usa la duración de foco de los ajustes para el total de minutos", async () => {
+    await ctx.service.updateSettings("u", { focusMinutes: 50 });
     render(<TasksView />);
-    await screen.findByText("alta");
-    expect(titles()).toEqual(["baja", "alta"]); // orden manual
-    fireEvent.change(screen.getByLabelText("Ordenar por"), {
-      target: { value: "priority" },
-    });
-    await waitFor(() => expect(titles()).toEqual(["alta", "baja"]));
-  });
-
-  it("«Todas» incluye las archivadas", async () => {
-    const t = await seed("vieja");
-    await ctx.tasks.update("u", t.id, { status: "archived" });
-    render(<TasksView />);
-    await screen.findByText(/Todavía no tenés tareas/);
-    fireEvent.change(screen.getByLabelText("Filtrar por estado"), {
-      target: { value: "all" },
-    });
-    await waitFor(() => expect(titles()).toEqual(["vieja"]));
-    expect(screen.getByRole("button", { name: /^Desarchivar/ })).toBeTruthy();
+    fireEvent.click(await screen.findByRole("button", { name: "Añadir tarea" }));
+    expect(await screen.findByText("100 min")).toBeTruthy();
   });
 });

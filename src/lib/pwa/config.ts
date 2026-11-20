@@ -7,7 +7,7 @@ export const PWA = {
   shortName: "Focus Garden",
   description: "Estudiá con Pomodoro y hacé crecer tu planta.",
   lang: "es",
-  startUrl: "/dashboard",
+  startUrl: "/focus",
   scope: "/",
   themeColor: "#3a5f37", // --leaf-strong
   backgroundColor: "#faf6ec", // --background

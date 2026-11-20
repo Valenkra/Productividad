@@ -8,6 +8,8 @@ const task = (over: Partial<Task> = {}): Task => ({
   userId: "u",
   title: "x",
   description: null,
+  subject: null,
+  estimatedPomodoros: 2,
   status: "todo",
   priority: "medium",
   dueAt: 1000,

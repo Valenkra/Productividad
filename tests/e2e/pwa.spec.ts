@@ -57,6 +57,8 @@ test("la API nunca queda en la caché del service worker", async ({ page }) => {
 test("humo funcional: en /focus se puede iniciar una sesión y corre el temporizador", async ({
   page,
 }) => {
+  // Sin esto, la guarda de onboarding redirige a /onboarding.
+  await page.request.patch("/api/settings", { data: { onboardingDone: true } });
   await page.goto("/focus");
   await page
     .getByRole("button", { name: /empezar|iniciar/i })
@@ -68,7 +70,15 @@ test("humo funcional: en /focus se puede iniciar una sesión y corre el temporiz
 
 test("a 360 px de ancho no hay scroll horizontal", async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 740 });
-  for (const path of ["/", "/dashboard", "/focus", "/settings"]) {
+  for (const path of [
+    "/",
+    "/onboarding",
+    "/focus",
+    "/tasks",
+    "/garden",
+    "/history",
+    "/settings",
+  ]) {
     await page.goto(path);
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth > window.innerWidth,

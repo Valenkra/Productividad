@@ -4,7 +4,14 @@ import { createTestService } from "../helpers/fake-api";
 let ctx: ReturnType<typeof createTestService>;
 const U = "u";
 const newTask = (title = "Estudiar álgebra", userId = U) =>
-  ctx.tasks.create(userId, { title, description: null, priority: "medium", dueAt: null });
+  ctx.tasks.create(userId, {
+    title,
+    description: null,
+    subject: null,
+    estimatedPomodoros: 2,
+    priority: "medium",
+    dueAt: null,
+  });
 
 beforeEach(() => {
   ctx = createTestService();
@@ -34,6 +41,43 @@ describe("asociar una sesión a una tarea", () => {
   it("sin tarea sigue funcionando", async () => {
     const { session } = await ctx.service.start(U, {});
     expect(session?.taskId).toBeNull();
+  });
+});
+
+describe("pomodoros completados por tarea", () => {
+  async function run(
+    taskId: string | undefined,
+    mode: "focus" | "short_break",
+    end: "completed" | "abandoned",
+  ) {
+    const { session } = await ctx.service.start(U, { taskId, mode });
+    // Heartbeats cada 15 s, como el cliente real.
+    const steps = end === "completed" ? Math.ceil(session!.plannedSeconds / 15) + 1 : 2;
+    for (let i = 0; i < steps; i++) {
+      ctx.advance(15);
+      await ctx.service.heartbeat(U, session!.id, `k-${session!.id}-${i}`);
+    }
+    if (end === "abandoned") await ctx.service.finish(U, session!.id, "abandoned");
+  }
+  const count = async (taskId: string) =>
+    (await ctx.tasks.get(U, taskId)).completedPomodoros;
+
+  it("cuenta solo los focos completados de esa tarea", async () => {
+    const a = await newTask("A");
+    const b = await newTask("B");
+    expect(await count(a.id)).toBe(0);
+    await run(a.id, "focus", "completed");
+    await run(a.id, "focus", "completed");
+    await run(b.id, "focus", "completed");
+    expect(await count(a.id)).toBe(2);
+    expect(await count(b.id)).toBe(1);
+  });
+
+  it("no cuenta focos abandonados ni descansos", async () => {
+    const a = await newTask("A");
+    await run(a.id, "focus", "abandoned");
+    await run(undefined, "short_break", "completed");
+    expect(await count(a.id)).toBe(0);
   });
 });
 

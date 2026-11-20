@@ -23,6 +23,8 @@ describe("container: tareas y sesiones comparten el mismo almacén", () => {
     const task = await getTaskService().create("wiring-user", {
       title: "Probar el cableado",
       description: null,
+      subject: null,
+      estimatedPomodoros: 2,
       priority: "medium",
       dueAt: null,
     });
@@ -34,6 +36,8 @@ describe("container: tareas y sesiones comparten el mismo almacén", () => {
     const task = await getTaskService().create("dueño", {
       title: "Ajena",
       description: null,
+      subject: null,
+      estimatedPomodoros: 2,
       priority: "low",
       dueAt: null,
     });

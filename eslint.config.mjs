@@ -8,6 +8,8 @@ const eslintConfig = defineConfig([
   // Override default ignores of eslint-config-next.
   globalIgnores([
     "coverage/**",
+    // Prototipo de diseño de referencia (HTML + runtime de terceros), no es código del proyecto.
+    "docs/design/**",
     // Default ignores of eslint-config-next:
     ".next/**",
     "out/**",

@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="./image-slot.js"></script>
+<style>
+body{margin:0;background:#f6e9dc;font-family:"Fredoka",system-ui,sans-serif;color:#3b2a4a}
+a{color:#c2492c}a:hover{color:#ff7a59}
+*{box-sizing:border-box}
+button{font-family:inherit;cursor:pointer}
+input{font-family:inherit}
+input::placeholder{color:#b3a2bf}
+</style>
+</helmet>
+
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px 16px">
+<div style="width:410px;height:864px;border:10px solid #111;border-radius:56px;overflow:hidden;background:#fff3e8;position:relative;box-shadow:0 30px 60px -20px rgba(59,42,74,.45);flex-shrink:0">
+<div style="position:absolute;inset:0;display:flex;flex-direction:column">
+
+  <div style="height:50px;flex-shrink:0;display:flex;justify-content:space-between;align-items:flex-end;padding:0 30px 6px;font-weight:600;font-size:15px"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><svg width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="1" fill="#3b2a4a"></rect><rect x="5" y="5" width="3" height="7" rx="1" fill="#3b2a4a"></rect><rect x="10" y="2" width="3" height="10" rx="1" fill="#3b2a4a"></rect><rect x="15" y="0" width="3" height="12" rx="1" fill="#3b2a4a"></rect></svg><svg width="26" height="12" viewBox="0 0 26 12"><rect x="0.5" y="0.5" width="22" height="11" rx="3" fill="none" stroke="#3b2a4a"></rect><rect x="2" y="2" width="17" height="8" rx="2" fill="#3b2a4a"></rect><rect x="24" y="4" width="2" height="4" rx="1" fill="#3b2a4a"></rect></svg></span></div>
+
+  <!-- ONBOARDING -->
+  <sc-if value="{{ showOb }}" hint-placeholder-val="{{ true }}">
+    <div style="flex:1;display:flex;flex-direction:column;padding:8px 24px 36px;gap:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;height:32px">
+        <div style="display:flex;gap:6px">
+          <sc-for list="{{ obDots }}" as="d" hint-placeholder-count="3"><span style="height:8px;border-radius:999px;background:{{ d.bg }};width:{{ d.w }}px;transition:all .25s"></span></sc-for>
+        </div>
+        <button onClick="{{ finishOb }}" style="background:none;border:0;color:#6d5a80;font-size:15px;font-weight:500" style-hover="color:#3b2a4a">Saltar</button>
+      </div>
+
+      <sc-if value="{{ ob0 }}" hint-placeholder-val="{{ true }}">
+        <div style="flex:1;display:flex;flex-direction:column;gap:20px">
+          <div style="height:380px;border-radius:36px;background:#c9ecd6;border:2px solid #3b2a4a;box-shadow:0 6px 0 #3b2a4a;position:relative;overflow:hidden">
+            <image-slot id="onboarding-plant" shape="rounded" radius="34" fit="contain" placeholder="Ilustración de bienvenida"></image-slot>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <h1 style="margin:0;font-size:34px;font-weight:600;line-height:1.1;text-wrap:pretty">Estudia y haz crecer tu planta</h1>
+            <p style="margin:0;font-size:17px;line-height:1.45;color:#6d5a80;text-wrap:pretty">Cada pomodoro empieza con una semilla. Si te concentras hasta el final, florece y se queda en tu jardín.</p>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ ob1 }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1;display:flex;flex-direction:column;gap:20px;padding-top:12px">
+          <h1 style="margin:0;font-size:34px;font-weight:600;line-height:1.1">Así funciona</h1>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;gap:14px;align-items:center;background:#fff;border:2px solid #3b2a4a;border-radius:24px;padding:16px;box-shadow:0 4px 0 #3b2a4a">
+              <span style="width:48px;height:48px;border-radius:16px;background:#e9e0ff;display:grid;place-items:center;font-size:22px;font-weight:600;flex-shrink:0">1</span>
+              <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:18px;font-weight:600">Elige una tarea</span><span style="font-size:15px;color:#6d5a80">De tu lista de pendientes</span></div>
+            </div>
+            <div style="display:flex;gap:14px;align-items:center;background:#fff;border:2px solid #3b2a4a;border-radius:24px;padding:16px;box-shadow:0 4px 0 #3b2a4a">
+              <span style="width:48px;height:48px;border-radius:16px;background:#ffe0d4;display:grid;place-items:center;font-size:22px;font-weight:600;flex-shrink:0">2</span>
+              <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:18px;font-weight:600">Concéntrate 25 minutos</span><span style="font-size:15px;color:#6d5a80">La planta crece mientras estudias</span></div>
+            </div>
+            <div style="display:flex;gap:14px;align-items:center;background:#fff;border:2px solid #3b2a4a;border-radius:24px;padding:16px;box-shadow:0 4px 0 #3b2a4a">
+              <span style="width:48px;height:48px;border-radius:16px;background:#c9ecd6;display:grid;place-items:center;font-size:22px;font-weight:600;flex-shrink:0">3</span>
+              <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:18px;font-weight:600">Descansa y colecciona</span><span style="font-size:15px;color:#6d5a80">Cada flor va a tu jardín</span></div>
+            </div>
+          </div>
+          <p style="margin:0;font-size:15px;line-height:1.45;color:#6d5a80;text-wrap:pretty">Si abandonas un pomodoro a medias, esa planta no florece. Sin dramas: la siguiente semilla te espera.</p>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ ob2 }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1;display:flex;flex-direction:column;gap:22px;padding-top:12px">
+          <h1 style="margin:0;font-size:34px;font-weight:600;line-height:1.1">Último paso</h1>
+          <label style="display:flex;flex-direction:column;gap:8px">
+            <span style="font-size:16px;font-weight:600">¿Cómo te llamamos?</span>
+            <input value="{{ name }}" onChange="{{ onName }}" placeholder="Tu nombre" style="height:58px;border-radius:18px;border:2px solid #3b2a4a;background:#fff;padding:0 18px;font-size:18px;color:#3b2a4a;outline:none" style-focus="box-shadow:0 0 0 4px #ffd3c4">
+          </label>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:16px;font-weight:600">Elige tu ritmo</span>
+            <sc-for list="{{ rhythms }}" as="r" hint-placeholder-count="3">
+              <button onClick="{{ r.onPick }}" style="display:flex;justify-content:space-between;align-items:center;height:64px;border-radius:20px;border:2px solid #3b2a4a;background:{{ r.bg }};padding:0 18px;box-shadow:0 4px 0 #3b2a4a;color:#3b2a4a">
+                <span style="display:flex;flex-direction:column;align-items:flex-start"><span style="font-size:17px;font-weight:600">{{ r.name }}</span><span style="font-size:14px;color:#6d5a80">{{ r.desc }}</span></span>
+                <span style="font-size:18px;font-weight:600">{{ r.label }}</span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <button onClick="{{ obNext }}" style="height:62px;border-radius:22px;background:#ff7a59;color:#fff;border:2px solid #3b2a4a;box-shadow:0 5px 0 #3b2a4a;font-size:19px;font-weight:600" style-hover="background:#ff8a6c" style-active="transform:translateY(4px);box-shadow:0 1px 0 #3b2a4a">{{ obCta }}</button>
+    </div>
+  </sc-if>
+
+  <!-- APP -->
+  <sc-if value="{{ main }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column">
+
+      <!-- FOCO / DESCANSO -->
+      <sc-if value="{{ tFoco }}" hint-placeholder-val="{{ true }}">
+        <div style="flex:1;display:flex;flex-direction:column;padding:8px 20px 20px;background:{{ screenBg }};transition:background .4s">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="display:flex;flex-direction:column"><span style="font-size:14px;color:#6d5a80;font-weight:500">{{ greeting }}</span><span style="font-size:26px;font-weight:600;line-height:1.15">{{ modeTitle }}</span></div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span style="background:#fff;border:2px solid #3b2a4a;border-radius:999px;padding:4px 12px;font-weight:600;font-size:14px;box-shadow:0 3px 0 #3b2a4a">{{ cycleLabel }}</span>
+              <button onClick="{{ goSettings }}" aria-label="Ajustes" style="width:44px;height:44px;border-radius:50%;background:#fff;border:2px solid #3b2a4a;box-shadow:0 3px 0 #3b2a4a;display:grid;place-items:center;color:#3b2a4a" style-active="transform:translateY(2px);box-shadow:0 1px 0 #3b2a4a"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
+            </div>
+          </div>
+
+          <div style="margin-top:14px;height:286px;flex-shrink:0;border-radius:36px;background:{{ plantBg }};border:2px solid #3b2a4a;box-shadow:0 6px 0 #3b2a4a;position:relative;overflow:hidden;transition:background .4s">
+            <sc-for list="{{ stages }}" as="s" hint-placeholder-count="1">
+              <div style="position:absolute;inset:0;opacity:{{ s.op }};pointer-events:{{ s.pe }};transition:opacity .5s">
+                <image-slot id="plant-stage-{{ s.i }}" shape="rounded" radius="34" fit="contain" placeholder="{{ s.ph }}"></image-slot>
+              </div>
+            </sc-for>
+            <span style="position:absolute;left:14px;top:14px;background:#fff;border-radius:999px;padding:4px 12px;font-size:14px;font-weight:600;pointer-events:none">{{ stageName }}</span>
+          </div>
+
+          <sc-if value="{{ isFocus }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;align-items:center;margin:18px 8px 0;height:30px">
+              <sc-for list="{{ path }}" as="p" hint-placeholder-count="6">
+                <sc-if value="{{ p.line }}" hint-placeholder-val="{{ false }}"><span style="flex:1;height:4px;background:{{ p.lineBg }};transition:background .3s"></span></sc-if>
+                <span title="{{ p.name }}" style="width:{{ p.size }}px;height:{{ p.size }}px;border-radius:50%;background:{{ p.bg }};border:{{ p.bw }}px solid {{ p.bc }};display:grid;place-items:center;flex-shrink:0;transition:all .3s"><sc-if value="{{ p.cur }}" hint-placeholder-val="{{ false }}"><span style="width:12px;height:12px;border-radius:50%;background:#ff7a59"></span></sc-if></span>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ isBreak }}" hint-placeholder-val="{{ false }}">
+            <div style="margin:16px 0 0;background:#fff;border-radius:18px;padding:10px 14px;font-size:15px;color:#6d5a80;text-align:center">{{ breakTip }}</div>
+          </sc-if>
+
+          <div style="text-align:center;font-size:92px;font-weight:600;line-height:1;margin-top:10px;font-variant-numeric:tabular-nums;letter-spacing:-.01em">{{ timeText }}</div>
+          <div style="text-align:center;font-size:15px;color:#6d5a80;margin-top:2px">{{ hint }}</div>
+
+          <sc-if value="{{ isFocus }}" hint-placeholder-val="{{ true }}">
+            <button onClick="{{ openPicker }}" style="margin-top:12px;background:#e9e0ff;border:0;border-radius:20px;padding:10px 14px;display:flex;align-items:center;gap:10px;color:#3b2a4a;text-align:left" style-hover="background:#ded2ff">
+              <span style="width:14px;height:14px;border-radius:50%;background:{{ selColor }};border:2px solid #3b2a4a;flex-shrink:0"></span>
+              <span style="flex:1;display:flex;flex-direction:column;min-width:0"><span style="font-size:16px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ selTitle }}</span><span style="font-size:13px;color:#6d5a80">{{ selMeta }}</span></span>
+              <span style="font-size:13px;color:#6d5a80;flex-shrink:0">cambiar</span>
+            </button>
+          </sc-if>
+
+          <div style="display:flex;gap:12px;padding-top:16px">
+            <button onClick="{{ primary }}" style="flex:1;height:62px;border-radius:22px;background:#ff7a59;color:#fff;border:2px solid #3b2a4a;box-shadow:0 5px 0 #3b2a4a;font-size:20px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px" style-hover="background:#ff8a6c" style-active="transform:translateY(4px);box-shadow:0 1px 0 #3b2a4a">{{ primaryLabel }}</button>
+            <sc-if value="{{ showSkip }}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{ skip }}" aria-label="{{ skipLabel }}" title="{{ skipLabel }}" style="width:72px;height:62px;border-radius:22px;background:#fff;color:#3b2a4a;border:2px solid #3b2a4a;box-shadow:0 5px 0 #3b2a4a;display:grid;place-items:center" style-active="transform:translateY(4px);box-shadow:0 1px 0 #3b2a4a"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" x2="19" y1="5" y2="19"></line></svg></button>
+            </sc-if>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- TAREAS -->
+      <sc-if value="{{ tTareas }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1;display:flex;flex-direction:column;padding:8px 20px 100px;gap:14px">
+          <div style="display:flex;flex-direction:column"><span style="font-size:14px;color:#6d5a80;font-weight:500">{{ pendingLabel }}</span><span style="font-size:30px;font-weight:600;line-height:1.15">Tareas</span></div>
+          <sc-for list="{{ pending }}" as="t" hint-placeholder-count="4">
+            <div style="display:flex;align-items:center;gap:12px;background:#fff;border:2px solid #3b2a4a;border-radius:22px;padding:12px;box-shadow:0 4px 0 #3b2a4a">
+              <button onClick="{{ t.onToggle }}" aria-label="Completar" style="width:30px;height:30px;border-radius:10px;border:2px solid #3b2a4a;background:#fff;flex-shrink:0;padding:0" style-hover="background:#c9ecd6"></button>
+              <button onClick="{{ t.onEdit }}" style="flex:1;min-width:0;background:none;border:0;padding:0;text-align:left;display:flex;flex-direction:column;gap:6px;color:#3b2a4a">
+                <span style="font-size:16px;font-weight:500;line-height:1.25;text-wrap:pretty">{{ t.title }}</span>
+                <span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+                  <span style="background:{{ t.subjColor }};border-radius:999px;padding:2px 9px;font-size:12px;font-weight:600">{{ t.subjName }}</span>
+                  <span style="display:flex;align-items:center;gap:4px;font-size:12px;color:#6d5a80"><span style="width:8px;height:8px;border-radius:50%;background:{{ t.prioColor }}"></span>{{ t.due }}</span>
+                  <span style="display:flex;gap:3px;margin-left:2px"><sc-for list="{{ t.dots }}" as="d" hint-placeholder-count="3"><span style="width:10px;height:10px;border-radius:50%;border:2px solid #ff7a59;background:{{ d.bg }}"></span></sc-for></span>
+                </span>
+              </button>
+              <button onClick="{{ t.onPlay }}" aria-label="Estudiar esta tarea" style="width:44px;height:44px;border-radius:50%;background:#ff7a59;border:2px solid #3b2a4a;box-shadow:0 3px 0 #3b2a4a;display:grid;place-items:center;flex-shrink:0;color:#fff" style-active="transform:translateY(2px);box-shadow:0 1px 0 #3b2a4a"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg></button>
+            </div>
+          </sc-for>
+          <sc-if value="{{ noPending }}" hint-placeholder-val="{{ false }}">
+            <div style="background:#c9ecd6;border-radius:22px;padding:20px;font-size:16px;text-align:center">¡Todo hecho! Añade algo nuevo o date un respiro.</div>
+          </sc-if>
+          <sc-if value="{{ hasDone }}" hint-placeholder-val="{{ true }}">
+            <span style="font-size:15px;font-weight:600;color:#6d5a80;margin-top:8px">Hechas</span>
+            <sc-for list="{{ doneList }}" as="t" hint-placeholder-count="1">
+              <div style="display:flex;align-items:center;gap:12px;background:#fbe9db;border-radius:22px;padding:12px">
+                <button onClick="{{ t.onToggle }}" aria-label="Desmarcar" style="width:30px;height:30px;border-radius:10px;border:2px solid #3b2a4a;background:#7fcf9f;flex-shrink:0;display:grid;place-items:center;padding:0;color:#3b2a4a"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></button>
+                <button onClick="{{ t.onEdit }}" style="flex:1;background:none;border:0;padding:0;text-align:left;font-size:16px;color:#8a7598;text-decoration:line-through">{{ t.title }}</button>
+                <span style="font-size:13px;color:#8a7598">{{ t.pomosLabel }}</span>
+              </div>
+            </sc-for>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <!-- JARDÍN -->
+      <sc-if value="{{ tJardin }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1;display:flex;flex-direction:column;padding:8px 20px 24px;gap:16px">
+          <div style="display:flex;flex-direction:column"><span style="font-size:14px;color:#6d5a80;font-weight:500">{{ gardenCount }}</span><span style="font-size:30px;font-weight:600;line-height:1.15">Tu jardín</span></div>
+          <sc-for list="{{ gardenGroups }}" as="g" hint-placeholder-count="2">
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:600"><span>{{ g.label }}</span><span style="color:#6d5a80;font-weight:500">{{ g.mins }}</span></div>
+              <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">
+                <sc-for list="{{ g.items }}" as="p" hint-placeholder-count="3">
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <div style="aspect-ratio:1;border-radius:22px;background:{{ p.color }};border:2px solid #3b2a4a;display:grid;place-items:center;color:#3b2a4a">
+                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5a3 3 0 1 1 3 3m-3-3a3 3 0 1 0-3 3m3-3v1M9 8a3 3 0 1 0 3 3M9 8h1m5 0a3 3 0 1 1-3 3m3-3h-1m-2 3v-1"></path><circle cx="12" cy="8" r="2"></circle><path d="M12 10v12"></path><path d="M12 22c4.2 0 7-1.667 7-5-4.2 0-7 1.667-7 5Z"></path><path d="M12 22c-4.2 0-7-1.667-7-5 4.2 0 7 1.667 7 5Z"></path></svg>
+                    </div>
+                    <span style="font-size:12px;line-height:1.25;color:#6d5a80;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">{{ p.title }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <!-- STATS -->
+      <sc-if value="{{ tStats }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1;display:flex;flex-direction:column;padding:8px 20px 24px;gap:16px">
+          <div style="display:flex;flex-direction:column"><span style="font-size:14px;color:#6d5a80;font-weight:500">Esta semana</span><span style="font-size:30px;font-weight:600;line-height:1.15">Estadísticas</span></div>
+          <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">
+            <div style="background:#ffe0d4;border-radius:22px;padding:14px;display:flex;flex-direction:column"><span style="font-size:28px;font-weight:600;line-height:1.1">{{ todayMin }}</span><span style="font-size:13px;color:#6d5a80">min hoy</span></div>
+            <div style="background:#c9ecd6;border-radius:22px;padding:14px;display:flex;flex-direction:column"><span style="font-size:28px;font-weight:600;line-height:1.1">{{ weekPomos }}</span><span style="font-size:13px;color:#6d5a80">pomodoros</span></div>
+            <div style="background:#e9e0ff;border-radius:22px;padding:14px;display:flex;flex-direction:column"><span style="font-size:28px;font-weight:600;line-height:1.1">5</span><span style="font-size:13px;color:#6d5a80">días de racha</span></div>
+          </div>
+          <div style="background:#fff;border:2px solid #3b2a4a;border-radius:26px;padding:16px;box-shadow:0 4px 0 #3b2a4a;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:600"><span>Minutos por día</span><span style="color:#6d5a80;font-weight:500">{{ weekTotal }}</span></div>
+            <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;align-items:end;height:170px">
+              <sc-for list="{{ bars }}" as="b" hint-placeholder-count="7">
+                <div style="display:flex;flex-direction:column;align-items:center;gap:6px;justify-content:flex-end;height:100%">
+                  <span style="font-size:12px;color:#6d5a80">{{ b.val }}</span>
+                  <div style="width:100%;height:{{ b.h }}px;border-radius:10px;background:{{ b.bg }};transition:height .4s"></div>
+                  <span style="font-size:13px;font-weight:{{ b.fw }}">{{ b.label }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="background:#fff;border:2px solid #3b2a4a;border-radius:26px;padding:16px;box-shadow:0 4px 0 #3b2a4a;display:flex;flex-direction:column;gap:12px">
+            <span style="font-size:16px;font-weight:600">Por materia</span>
+            <sc-for list="{{ bySubject }}" as="s" hint-placeholder-count="4">
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <div style="display:flex;justify-content:space-between;font-size:14px"><span>{{ s.name }}</span><span style="color:#6d5a80">{{ s.label }}</span></div>
+                <div style="height:12px;border-radius:999px;background:#f6ece4;overflow:hidden"><div style="height:100%;width:{{ s.pct }}%;background:{{ s.color }};border-radius:999px;border:2px solid #3b2a4a"></div></div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- AJUSTES -->
+      <sc-if value="{{ tAjustes }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1;display:flex;flex-direction:column;padding:8px 20px 24px;gap:16px">
+          <div style="display:flex;align-items:center;gap:12px">
+            <button onClick="{{ goFoco }}" aria-label="Volver" style="width:44px;height:44px;border-radius:50%;background:#fff;border:2px solid #3b2a4a;box-shadow:0 3px 0 #3b2a4a;display:grid;place-items:center;color:#3b2a4a"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg></button>
+            <span style="font-size:30px;font-weight:600">Ajustes</span>
+          </div>
+          <span style="font-size:15px;font-weight:600;color:#6d5a80">Tiempos</span>
+          <div style="background:#fff;border:2px solid #3b2a4a;border-radius:26px;box-shadow:0 4px 0 #3b2a4a;overflow:hidden">
+            <sc-for list="{{ timeRows }}" as="r" hint-placeholder-count="4">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-top:{{ r.border }}">
+                <div style="display:flex;flex-direction:column"><span style="font-size:16px;font-weight:500">{{ r.label }}</span><span style="font-size:13px;color:#6d5a80">{{ r.sub }}</span></div>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <button onClick="{{ r.dec }}" aria-label="Menos" style="width:36px;height:36px;border-radius:12px;border:2px solid #3b2a4a;background:#fff3e8;font-size:20px;font-weight:600;color:#3b2a4a;padding:0" style-hover="background:#ffe0d4">−</button>
+                  <span style="min-width:52px;text-align:center;font-size:18px;font-weight:600;font-variant-numeric:tabular-nums">{{ r.val }}</span>
+                  <button onClick="{{ r.inc }}" aria-label="Más" style="width:36px;height:36px;border-radius:12px;border:2px solid #3b2a4a;background:#fff3e8;font-size:20px;font-weight:600;color:#3b2a4a;padding:0" style-hover="background:#ffe0d4">+</button>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <span style="font-size:15px;font-weight:600;color:#6d5a80">Preferencias</span>
+          <div style="background:#fff;border:2px solid #3b2a4a;border-radius:26px;box-shadow:0 4px 0 #3b2a4a;overflow:hidden">
+            <sc-for list="{{ toggles }}" as="t" hint-placeholder-count="2">
+              <button onClick="{{ t.onToggle }}" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:14px;background:none;border:0;border-top:{{ t.border }};color:#3b2a4a;text-align:left">
+                <span style="font-size:16px;font-weight:500">{{ t.label }}</span>
+                <span style="width:54px;height:32px;border-radius:999px;border:2px solid #3b2a4a;background:{{ t.track }};position:relative;transition:background .2s;flex-shrink:0"><span style="position:absolute;top:2px;left:{{ t.knob }}px;width:24px;height:24px;border-radius:50%;background:#fff;border:2px solid #3b2a4a;transition:left .2s"></span></span>
+              </button>
+            </sc-for>
+          </div>
+          <button onClick="{{ restartOb }}" style="height:52px;border-radius:18px;background:transparent;border:2px dashed #c9b8d6;color:#6d5a80;font-size:15px;font-weight:500" style-hover="border-color:#3b2a4a;color:#3b2a4a">Ver la introducción otra vez</button>
+        </div>
+      </sc-if>
+    </div>
+
+    <sc-if value="{{ tTareas }}" hint-placeholder-val="{{ false }}">
+      <button onClick="{{ openNew }}" aria-label="Nueva tarea" style="position:absolute;right:20px;bottom:104px;width:64px;height:64px;border-radius:22px;background:#ff7a59;border:2px solid #3b2a4a;box-shadow:0 5px 0 #3b2a4a;color:#fff;display:grid;place-items:center;z-index:2" style-active="transform:translateY(4px);box-shadow:0 1px 0 #3b2a4a"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg></button>
+    </sc-if>
+
+    <div style="flex-shrink:0;display:grid;grid-template-columns:repeat(4,1fr);padding:10px 12px 28px;background:#fff;border-top:2px solid #f1d9c8">
+      <button onClick="{{ goFoco }}" style="background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;font-weight:600;color:{{ tabFoco }}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="10" x2="14" y1="2" y2="2"></line><line x1="12" x2="15" y1="14" y2="11"></line><circle cx="12" cy="14" r="8"></circle></svg>Foco</button>
+      <button onClick="{{ goTareas }}" style="background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;font-weight:600;color:{{ tabTareas }}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m3 17 2 2 4-4"></path><path d="m3 7 2 2 4-4"></path><path d="M13 6h8"></path><path d="M13 12h8"></path><path d="M13 18h8"></path></svg>Tareas</button>
+      <button onClick="{{ goJardin }}" style="background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;font-weight:600;color:{{ tabJardin }}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M7 20h10"></path><path d="M10 20c5.5-2.5.8-6.4 3-10"></path><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"></path><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"></path></svg>Jardín</button>
+      <button onClick="{{ goStats }}" style="background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;font-weight:600;color:{{ tabStats }}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 3v18h18"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg>Stats</button>
+    </div>
+  </sc-if>
+</div>
+
+<!-- PICKER -->
+<sc-if value="{{ showPicker }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;inset:0;background:rgba(59,42,74,.45);display:flex;flex-direction:column;justify-content:flex-end;z-index:5" onClick="{{ closePicker }}">
+    <div onClick="{{ stop }}" style="background:#fff3e8;border-radius:32px 32px 0 0;padding:14px 20px 36px;display:flex;flex-direction:column;gap:10px;max-height:80%;overflow-y:auto">
+      <div style="width:44px;height:5px;border-radius:999px;background:#e5cfc0;margin:0 auto 6px"></div>
+      <span style="font-size:22px;font-weight:600">¿En qué vas a trabajar?</span>
+      <sc-for list="{{ pickList }}" as="t" hint-placeholder-count="3">
+        <button onClick="{{ t.onPick }}" style="display:flex;align-items:center;gap:12px;background:{{ t.bg }};border:2px solid #3b2a4a;border-radius:20px;padding:12px 14px;color:#3b2a4a;text-align:left">
+          <span style="width:14px;height:14px;border-radius:50%;background:{{ t.subjColor }};border:2px solid #3b2a4a;flex-shrink:0"></span>
+          <span style="flex:1;font-size:16px;font-weight:500">{{ t.title }}</span>
+          <span style="font-size:13px;color:#6d5a80">{{ t.pomosLabel }}</span>
+        </button>
+      </sc-for>
+      <button onClick="{{ pickNone }}" style="height:50px;border-radius:18px;border:2px dashed #c9b8d6;background:transparent;color:#6d5a80;font-size:15px;font-weight:500">Sesión libre, sin tarea</button>
+      <button onClick="{{ pickNew }}" style="height:50px;border-radius:18px;border:0;background:#e9e0ff;color:#3b2a4a;font-size:15px;font-weight:600">+ Nueva tarea</button>
+    </div>
+  </div>
+</sc-if>
+
+<!-- EDIT SHEET -->
+<sc-if value="{{ showEdit }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;inset:0;background:rgba(59,42,74,.45);display:flex;flex-direction:column;justify-content:flex-end;z-index:6">
+    <div style="background:#fff3e8;border-radius:32px 32px 0 0;padding:14px 20px 34px;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:24px;font-weight:600">{{ editTitle }}</span>
+        <button onClick="{{ closeEdit }}" aria-label="Cerrar" style="width:40px;height:40px;border-radius:50%;border:2px solid #3b2a4a;background:#fff;display:grid;place-items:center;color:#3b2a4a;padding:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <input value="{{ dTitle }}" onChange="{{ onDTitle }}" placeholder="¿Qué tienes que estudiar?" style="height:56px;border-radius:18px;border:2px solid {{ titleBorder }};background:#fff;padding:0 16px;font-size:17px;color:#3b2a4a;outline:none" style-focus="box-shadow:0 0 0 4px #ffd3c4">
+        <sc-if value="{{ hasError }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;color:#c2492c;font-weight:500">Ponle un nombre a la tarea</span></sc-if>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="font-size:14px;font-weight:600;color:#6d5a80">Materia</span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <sc-for list="{{ subjChips }}" as="c" hint-placeholder-count="4">
+            <button onClick="{{ c.onPick }}" style="height:38px;padding:0 14px;border-radius:999px;border:2px solid {{ c.bc }};background:{{ c.bg }};color:#3b2a4a;font-size:14px;font-weight:600">{{ c.name }}</button>
+          </sc-for>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="font-size:14px;font-weight:600;color:#6d5a80">Prioridad</span>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:#fbe3d4;padding:4px;border-radius:16px">
+          <sc-for list="{{ prioChips }}" as="c" hint-placeholder-count="3">
+            <button onClick="{{ c.onPick }}" style="height:40px;border-radius:12px;border:{{ c.border }};background:{{ c.bg }};color:#3b2a4a;font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:{{ c.dot }}"></span>{{ c.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span style="font-size:14px;font-weight:600;color:#6d5a80">Pomodoros</span>
+          <div style="display:flex;align-items:center;justify-content:space-between;background:#fff;border:2px solid #3b2a4a;border-radius:16px;height:48px;padding:0 6px">
+            <button onClick="{{ estDec }}" aria-label="Menos" style="width:34px;height:34px;border-radius:10px;border:0;background:#fff3e8;font-size:20px;font-weight:600;color:#3b2a4a;padding:0">−</button>
+            <span style="font-size:18px;font-weight:600">{{ dEst }}</span>
+            <button onClick="{{ estInc }}" aria-label="Más" style="width:34px;height:34px;border-radius:10px;border:0;background:#fff3e8;font-size:20px;font-weight:600;color:#3b2a4a;padding:0">+</button>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span style="font-size:14px;font-weight:600;color:#6d5a80">Total</span>
+          <div style="height:48px;display:flex;align-items:center;font-size:17px;font-weight:500">{{ dEstMin }}</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="font-size:14px;font-weight:600;color:#6d5a80">Para cuándo</span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <sc-for list="{{ dueChips }}" as="c" hint-placeholder-count="4">
+            <button onClick="{{ c.onPick }}" style="height:38px;padding:0 14px;border-radius:999px;border:2px solid {{ c.bc }};background:{{ c.bg }};color:#3b2a4a;font-size:14px;font-weight:600">{{ c.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;padding-top:4px">
+        <sc-if value="{{ canDelete }}" hint-placeholder-val="{{ false }}">
+          <button onClick="{{ delTask }}" aria-label="Eliminar" style="width:62px;height:60px;border-radius:20px;background:#fff;border:2px solid #3b2a4a;box-shadow:0 5px 0 #3b2a4a;display:grid;place-items:center;color:#c2492c"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg></button>
+        </sc-if>
+        <button onClick="{{ saveTask }}" style="flex:1;height:60px;border-radius:20px;background:#ff7a59;color:#fff;border:2px solid #3b2a4a;box-shadow:0 5px 0 #3b2a4a;font-size:19px;font-weight:600" style-hover="background:#ff8a6c" style-active="transform:translateY(4px);box-shadow:0 1px 0 #3b2a4a">Guardar</button>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+<!-- CONFIRM -->
+<sc-if value="{{ showConfirm }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;inset:0;background:rgba(59,42,74,.5);display:grid;place-items:center;padding:28px;z-index:7">
+    <div style="background:#fff;border:2px solid #3b2a4a;border-radius:30px;box-shadow:0 6px 0 #3b2a4a;padding:22px;display:flex;flex-direction:column;gap:12px;width:100%">
+      <span style="font-size:22px;font-weight:600;line-height:1.2">¿Rendirte ahora?</span>
+      <span style="font-size:16px;line-height:1.45;color:#6d5a80">Tu {{ stageNameLower }} no llegará a florecer y no irá al jardín. Lo que estudiaste sigue contando para ti.</span>
+      <div style="display:flex;flex-direction:column;gap:10px;padding-top:6px">
+        <button onClick="{{ cancelConfirm }}" style="height:56px;border-radius:20px;background:#ff7a59;color:#fff;border:2px solid #3b2a4a;box-shadow:0 4px 0 #3b2a4a;font-size:18px;font-weight:600" style-active="transform:translateY(3px);box-shadow:0 1px 0 #3b2a4a">Seguir estudiando</button>
+        <button onClick="{{ doAbandon }}" style="height:48px;border-radius:18px;background:transparent;border:0;color:#6d5a80;font-size:16px;font-weight:500" style-hover="color:#c2492c">Sí, terminar</button>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;demoSpeed&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;1&quot;,&quot;10&quot;,&quot;60&quot;],&quot;default&quot;:&quot;60&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Demo&quot;},&quot;showOnboarding&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Demo&quot;}}">
+const SUBJ={calc:{name:'Cálculo II',color:'#ffb59e'},quim:{name:'Química',color:'#bfe8cf'},hist:{name:'Historia',color:'#ddd2ff'},ing:{name:'Inglés',color:'#ffe3a3'}};
+const FREE={name:'Libre',color:'#f1d9c8'};
+const PRIO={alta:{label:'Alta',color:'#ff7a59'},media:{label:'Media',color:'#ffc24d'},baja:{label:'Baja',color:'#7fcf9f'}};
+const STAGES=['Semilla','Brote','Plántula','Planta joven','Arbusto','Florecida'];
+const DUES=['Hoy','Mañana','Esta semana','Sin fecha'];
+const DAYS=['L','M','X','J','V','S','D'];
+const WHEN=[['Hoy','Hoy',4],['Ayer','Ayer',3],['Mié','Miércoles',2],['Mar','Martes',1],['Lun','Lunes',0]];
+const RHYTHMS=[{name:'Clásico',desc:'El pomodoro de siempre',focus:25,short:5,long:15},{name:'Profundo',desc:'Para temas densos',focus:50,short:10,long:20},{name:'Ligero',desc:'Para arrancar sin pereza',focus:15,short:3,long:10}];
+const fmt=s=>{s=Math.max(0,Math.ceil(s));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
+function seedGarden(){const g=[];let id=1;const add=(n,title,subj,when)=>{for(let i=0;i<n;i++)g.push({id:id++,title,subj,mins:25,when})};
+add(2,'Cálculo II — Ejercicios tema 4','calc','Hoy');add(1,'Entregar práctica de laboratorio','quim','Hoy');
+add(1,'Leer sobre la Revolución Industrial','hist','Ayer');add(1,'Entregar práctica de laboratorio','quim','Ayer');
+add(1,'Vocabulario unidad 4','ing','Mié');add(3,'Cálculo II — Derivadas parciales','calc','Mié');
+add(2,'Cálculo II — Límites','calc','Mar');add(2,'Historia — Esquema tema 2','hist','Lun');return g;}
+
+class Component extends DCLogic {
+  state={onboarding:null,obStep:0,name:'Vale',rhythm:0,tab:'foco',
+    tasks:[
+      {id:1,title:'Cálculo II — Ejercicios tema 4',subj:'calc',prio:'alta',est:4,pomos:2,due:'Hoy',done:false},
+      {id:2,title:'Resumen capítulo 7 de Química orgánica',subj:'quim',prio:'media',est:3,pomos:0,due:'Hoy',done:false},
+      {id:3,title:'Leer sobre la Revolución Industrial',subj:'hist',prio:'baja',est:2,pomos:1,due:'Mañana',done:false},
+      {id:4,title:'Vocabulario unidad 5',subj:'ing',prio:'media',est:1,pomos:0,due:'Esta semana',done:false},
+      {id:5,title:'Entregar práctica de laboratorio',subj:'quim',prio:'alta',est:2,pomos:2,due:'Hoy',done:true}],
+    nextId:6,selectedId:1,mode:'focus',remaining:25*60,running:false,done:1,
+    settings:{focus:25,short:5,long:15,interval:4,autoBreak:true,sound:true},
+    garden:seedGarden(),nextGid:100,picker:false,draft:null,error:false,confirm:false};
+
+  componentDidMount(){this.iv=setInterval(()=>this.tick(),1000);}
+  componentWillUnmount(){clearInterval(this.iv);}
+  planned(mode,st){st=st||this.state.settings;return (mode==='focus'?st.focus:mode==='short'?st.short:st.long)*60;}
+  tick(){const s=this.state;if(!s.running)return;const sp=Number(this.props.demoSpeed??60)||1;const r=s.remaining-sp;if(r<=0)this.complete();else this.setState({remaining:r});}
+  complete(){this.setState(s=>{
+    if(s.mode==='focus'){const t=s.tasks.find(x=>x.id===s.selectedId);const done=s.done+1;const next=done>=s.settings.interval?'long':'short';
+      return {garden:[{id:s.nextGid,title:t?t.title:'Sesión libre',subj:t?t.subj:null,mins:s.settings.focus,when:'Hoy'},...s.garden],nextGid:s.nextGid+1,
+        tasks:s.tasks.map(x=>x.id===s.selectedId?{...x,pomos:x.pomos+1}:x),done,mode:next,remaining:this.planned(next,s.settings),running:s.settings.autoBreak};}
+    return {mode:'focus',done:s.mode==='long'?0:s.done,remaining:s.settings.focus*60,running:false};});}
+  setSetting(k,d){this.setState(s=>{const lim={focus:[5,180],short:[1,60],long:[5,120],interval:[2,12]}[k];const v=Math.min(lim[1],Math.max(lim[0],s.settings[k]+d));const st={...s.settings,[k]:v};
+    const idle=!s.running&&s.remaining===this.planned(s.mode,s.settings);return {settings:st,remaining:idle?this.planned(s.mode,st):s.remaining};});}
+  setDraft(p){this.setState(s=>({draft:{...s.draft,...p},error:p.title!==undefined?false:s.error}));}
+  saveTask(){const s=this.state,d=s.draft;if(!d.title.trim()){this.setState({error:true});return;}
+    if(d.id)this.setState({tasks:s.tasks.map(t=>t.id===d.id?{...d,title:d.title.trim()}:t),draft:null});
+    else this.setState({tasks:[...s.tasks,{...d,title:d.title.trim(),id:s.nextId,pomos:0,done:false}],nextId:s.nextId+1,draft:null,selectedId:s.fromPicker?s.nextId:s.selectedId,fromPicker:false});}
+
+  renderVals(){
+    const s=this.state,st=s.settings,set=p=>()=>this.setState(p);
+    const onb=s.onboarding??(this.props.showOnboarding??true);
+    const isFocus=s.mode==='focus',planned=this.planned(s.mode),elapsed=planned-s.remaining;
+    const stage=isFocus?Math.min(4,Math.floor(elapsed/planned*5)):5;
+    const idle=isFocus&&!s.running&&elapsed<=0;
+    const sel=s.tasks.find(t=>t.id===s.selectedId);
+    const subj=k=>SUBJ[k]||FREE;
+    const nextAt=(stage+1)*planned/5;
+    const tabC=k=>s.tab===k?'#ff7a59':'#8a7598';
+    const taskRow=t=>({...t,subjName:subj(t.subj).name,subjColor:subj(t.subj).color,prioColor:PRIO[t.prio].color,
+      dots:Array.from({length:Math.max(t.est,t.pomos)},(_,i)=>({bg:i<t.pomos?'#ff7a59':'#fff'})),pomosLabel:t.pomos+'/'+t.est,
+      onToggle:()=>this.setState(x=>({tasks:x.tasks.map(y=>y.id===t.id?{...y,done:!y.done}:y)})),
+      onEdit:()=>this.setState({draft:{...t},error:false}),
+      onPlay:()=>this.setState({selectedId:t.id,tab:'foco'})});
+    const pending=s.tasks.filter(t=>!t.done).map(taskRow),doneList=s.tasks.filter(t=>t.done).map(taskRow);
+    const gardenGroups=WHEN.map(([k,label])=>{const items=s.garden.filter(g=>g.when===k);return {label,mins:items.reduce((a,b)=>a+b.mins,0)+' min',items:items.map(g=>({title:g.title,color:subj(g.subj).color}))};}).filter(g=>g.items.length);
+    const week=[0,0,0,0,0,0,0];s.garden.forEach(g=>{const w=WHEN.find(x=>x[0]===g.when);if(w)week[w[2]]+=g.mins;});
+    const maxW=Math.max(100,...week);
+    const subjMins=Object.keys(SUBJ).map(k=>({k,m:s.garden.filter(g=>g.subj===k).reduce((a,b)=>a+b.mins,0)})).sort((a,b)=>b.m-a.m);
+    const maxS=Math.max(1,...subjMins.map(x=>x.m));
+    const d=s.draft;
+    const BREAK_TIPS={short:'Levántate, estira la espalda y bebe agua.',long:'Descanso largo: sal a caminar o come algo rico.'};
+    let primaryLabel,primary;
+    if(s.running){primaryLabel='Pausar';primary=set({running:false});}
+    else if(idle){primaryLabel='Empezar';primary=set({running:true});}
+    else {primaryLabel='Seguir';primary=set({running:true});}
+    const hint=!isFocus?(s.running?'Tu planta ya está en el jardín':'Descanso en pausa'):idle?'Pulsa empezar para plantar tu semilla':!s.running?'En pausa — tu planta te espera':stage<4?STAGES[stage+1]+' en '+fmt((nextAt-elapsed)):'Florece al terminar';
+    return {
+      showOb:onb,main:!onb,ob0:s.obStep===0,ob1:s.obStep===1,ob2:s.obStep===2,
+      obDots:[0,1,2].map(i=>({bg:i===s.obStep?'#ff7a59':'#f1d9c8',w:i===s.obStep?26:8})),
+      obCta:s.obStep===2?'Empezar a estudiar':'Siguiente',
+      obNext:()=>s.obStep<2?this.setState({obStep:s.obStep+1}):this.setState({onboarding:false,tab:'foco'}),
+      finishOb:set({onboarding:false}),restartOb:set({onboarding:true,obStep:0}),
+      name:s.name,onName:e=>this.setState({name:e.target.value}),
+      rhythms:RHYTHMS.map((r,i)=>({...r,label:r.focus+' / '+r.short,bg:s.rhythm===i?'#ffe0d4':'#fff',
+        onPick:()=>this.setState(x=>{const ns={...x.settings,focus:r.focus,short:r.short,long:r.long};return {rhythm:i,settings:ns,remaining:x.running?x.remaining:this.planned(x.mode,ns)};})})),
+      tFoco:s.tab==='foco',tTareas:s.tab==='tareas',tJardin:s.tab==='jardin',tStats:s.tab==='stats',tAjustes:s.tab==='ajustes',
+      goFoco:set({tab:'foco'}),goTareas:set({tab:'tareas'}),goJardin:set({tab:'jardin'}),goStats:set({tab:'stats'}),goSettings:set({tab:'ajustes'}),
+      tabFoco:tabC('foco'),tabTareas:tabC('tareas'),tabJardin:tabC('jardin'),tabStats:tabC('stats'),
+      screenBg:isFocus?'#fff3e8':'#f1ebff',plantBg:isFocus?'#c9ecd6':'#e3d8ff',
+      greeting:isFocus?(s.running?'Concentración a tope':'¡A por ello'+(s.name.trim()?', '+s.name.trim():'')+'!'):'¡Floreció! Bien hecho',
+      modeTitle:isFocus?'Concentración':s.mode==='short'?'Descanso corto':'Descanso largo',
+      cycleLabel:(isFocus?s.done+1:s.done)+'/'+st.interval,
+      isFocus,isBreak:!isFocus,breakTip:BREAK_TIPS[s.mode],
+      stages:STAGES.map((n,i)=>({i,op:i===stage?1:0,pe:i===stage?'auto':'none',ph:'Etapa '+(i+1)+' · '+n})),
+      stageName:STAGES[stage],stageNameLower:STAGES[stage].toLowerCase(),
+      path:STAGES.map((n,i)=>{const cur=i===stage,dn=i<stage;return {name:n,line:i>0,lineBg:i<=stage?'#ff7a59':'#f1d9c8',cur,size:cur?30:22,bg:dn?'#ff7a59':cur?'#fff':'#f1d9c8',bw:dn?2:cur?3:0,bc:cur?'#ff7a59':'#3b2a4a'};}),
+      timeText:fmt(s.remaining),hint,
+      selTitle:sel?sel.title:'Sesión libre',selMeta:sel?subj(sel.subj).name+' · '+sel.pomos+' de '+sel.est+' pomodoros':'Toca para elegir una tarea',selColor:sel?subj(sel.subj).color:FREE.color,
+      openPicker:set({picker:true}),closePicker:set({picker:false}),stop:e=>e.stopPropagation(),
+      primary,primaryLabel,
+      showSkip:!isFocus||elapsed>0,skipLabel:isFocus?'Terminar pomodoro':'Saltar descanso',
+      skip:isFocus?set({confirm:true,running:false}):()=>this.setState({remaining:0},()=>this.complete()),
+      cancelConfirm:set({confirm:false,running:true}),doAbandon:()=>this.setState({confirm:false,running:false,remaining:st.focus*60}),showConfirm:s.confirm,
+      pending,doneList,noPending:!pending.length,hasDone:doneList.length>0,
+      pendingLabel:pending.filter(t=>t.due==='Hoy').length+' para hoy · '+pending.length+' pendientes',
+      showPicker:s.picker,
+      pickList:pending.map(t=>({...t,bg:t.id===s.selectedId?'#ffe0d4':'#fff',onPick:()=>this.setState({selectedId:t.id,picker:false})})),
+      pickNone:set({selectedId:null,picker:false}),
+      pickNew:()=>this.setState({picker:false,fromPicker:true,error:false,draft:{id:null,title:'',subj:'calc',prio:'media',est:2,due:'Hoy'}}),
+      openNew:()=>this.setState({fromPicker:false,error:false,draft:{id:null,title:'',subj:'calc',prio:'media',est:2,due:'Hoy'}}),
+      showEdit:!!d,editTitle:d&&d.id?'Editar tarea':'Nueva tarea',canDelete:!!(d&&d.id),
+      dTitle:d?d.title:'',onDTitle:e=>this.setDraft({title:e.target.value}),hasError:s.error,titleBorder:s.error?'#c2492c':'#3b2a4a',
+      subjChips:Object.keys(SUBJ).map(k=>({name:SUBJ[k].name,bg:d&&d.subj===k?SUBJ[k].color:'#fff',bc:d&&d.subj===k?'#3b2a4a':'#ead6c8',onPick:()=>this.setDraft({subj:k})})),
+      prioChips:Object.keys(PRIO).map(k=>({label:PRIO[k].label,dot:PRIO[k].color,bg:d&&d.prio===k?'#fff':'transparent',border:d&&d.prio===k?'2px solid #3b2a4a':'2px solid transparent',onPick:()=>this.setDraft({prio:k})})),
+      dEst:d?d.est:0,dEstMin:d?d.est*st.focus+' min':'',estDec:()=>this.setDraft({est:Math.max(1,d.est-1)}),estInc:()=>this.setDraft({est:Math.min(12,d.est+1)}),
+      dueChips:DUES.map(k=>({label:k,bg:d&&d.due===k?'#e9e0ff':'#fff',bc:d&&d.due===k?'#3b2a4a':'#ead6c8',onPick:()=>this.setDraft({due:k})})),
+      closeEdit:set({draft:null}),saveTask:()=>this.saveTask(),
+      delTask:()=>this.setState(x=>({tasks:x.tasks.filter(t=>t.id!==x.draft.id),draft:null,selectedId:x.selectedId===x.draft.id?null:x.selectedId})),
+      gardenCount:s.garden.length+' plantas florecidas',gardenGroups,
+      todayMin:week[4],weekPomos:s.garden.length,weekTotal:week.reduce((a,b)=>a+b,0)+' min',
+      bars:week.map((m,i)=>({label:DAYS[i],val:m?m:'',h:Math.max(i>4?6:8,Math.round(m/maxW*110)),bg:i===4?'#ff7a59':i>4?'#f6ece4':'#ffc4b0',fw:i===4?700:500})),
+      bySubject:subjMins.map(x=>({name:SUBJ[x.k].name,color:SUBJ[x.k].color,pct:Math.max(6,Math.round(x.m/maxS*100)),label:x.m+' min'})),
+      timeRows:[['focus','Concentración','Minutos por pomodoro',5,' min'],['short','Descanso corto','Entre pomodoros',1,' min'],['long','Descanso largo','Al cerrar un ciclo',5,' min'],['interval','Ciclo','Pomodoros antes del largo',1,'']].map(([k,label,sub,step,u],i)=>({label,sub,val:st[k]+u,border:i?'2px solid #f6ece4':'0',dec:()=>this.setSetting(k,-step),inc:()=>this.setSetting(k,step)})),
+      toggles:[['autoBreak','Empezar descanso automáticamente'],['sound','Sonido al terminar']].map(([k,label],i)=>({label,track:st[k]?'#7fcf9f':'#f1d9c8',knob:st[k]?24:2,border:i?'2px solid #f6ece4':'0',onToggle:()=>this.setState(x=>({settings:{...x.settings,[k]:!x.settings[k]}}))}))
+    };
+  }
+}
+</script>
+</body>
+</html>

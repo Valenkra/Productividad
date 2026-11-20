@@ -19,6 +19,8 @@ const make = (over: Partial<Task> = {}): Task => ({
   userId: "u",
   title: "Estudiar",
   description: null,
+  subject: null,
+  estimatedPomodoros: 2,
   status: "todo",
   priority: "medium",
   dueAt: null,
@@ -34,9 +36,21 @@ describe("createTaskSchema", () => {
     expect(createTaskSchema.parse({ title: "  Leer cap. 3  " })).toEqual({
       title: "Leer cap. 3",
       description: null,
+      subject: null,
+      estimatedPomodoros: 2,
       priority: "medium",
       dueAt: null,
     });
+  });
+
+  it("acepta materia y pomodoros estimados dentro de rango", () => {
+    expect(
+      createTaskSchema.parse({ title: "a", subject: "quimica", estimatedPomodoros: 12 }),
+    ).toMatchObject({ subject: "quimica", estimatedPomodoros: 12 });
+    expect(createTaskSchema.parse({ title: "a", estimatedPomodoros: 1 })).toMatchObject({
+      estimatedPomodoros: 1,
+    });
+    expect(createTaskSchema.parse({ title: "a", subject: null }).subject).toBeNull();
   });
 
   it.each([
@@ -47,6 +61,10 @@ describe("createTaskSchema", () => {
     ["prioridad inválida", { title: "a", priority: "urgente" }],
     ["dueAt no entero", { title: "a", dueAt: 1.5 }],
     ["dueAt negativo", { title: "a", dueAt: -1 }],
+    ["materia desconocida", { title: "a", subject: "fisica" }],
+    ["0 pomodoros", { title: "a", estimatedPomodoros: 0 }],
+    ["13 pomodoros", { title: "a", estimatedPomodoros: 13 }],
+    ["pomodoros no enteros", { title: "a", estimatedPomodoros: 1.5 }],
   ])("rechaza %s", (_name, input) => {
     expect(createTaskSchema.safeParse(input).success).toBe(false);
   });
@@ -64,6 +82,11 @@ describe("updateTaskSchema", () => {
     expect(updateTaskSchema.safeParse({ dueAt: null, priority: "high" }).success).toBe(
       true,
     );
+    expect(
+      updateTaskSchema.safeParse({ subject: "ingles", estimatedPomodoros: 3 }).success,
+    ).toBe(true);
+    expect(updateTaskSchema.safeParse({ subject: null }).success).toBe(true);
+    expect(updateTaskSchema.safeParse({ estimatedPomodoros: 13 }).success).toBe(false);
   });
 
   it("exige al menos un campo y valida los valores", () => {
@@ -100,7 +123,14 @@ describe("createTask", () => {
     const task = createTask({
       id: "id-1",
       userId: "u",
-      input: { title: "A", description: null, priority: "high", dueAt: 5 },
+      input: {
+        title: "A",
+        description: null,
+        subject: "calculo",
+        estimatedPomodoros: 4,
+        priority: "high",
+        dueAt: 5,
+      },
       position: 3,
       now: NOW,
     });
@@ -109,6 +139,8 @@ describe("createTask", () => {
       userId: "u",
       title: "A",
       description: null,
+      subject: "calculo",
+      estimatedPomodoros: 4,
       status: "todo",
       priority: "high",
       dueAt: 5,

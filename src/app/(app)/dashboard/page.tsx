@@ -1,5 +1,6 @@
-import { DashboardView } from "@/features/history/dashboard-view";
+import { redirect } from "next/navigation";
 
+/** Inicio se fusionó con Foco en el rediseño; la ruta vieja sigue funcionando. */
 export default function Page() {
-  return <DashboardView />;
+  redirect("/focus");
 }

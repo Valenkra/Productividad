@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { growthInfo, MAX_STAGE, STAGE_NAMES, STAGE_THRESHOLDS } from "./growth";
+import { subjectOf } from "@/features/tasks/subjects";
 import { PlantIllustration } from "./plant-illustration";
+import { groupPlantsByDay, type GardenPlant } from "./plants";
 
 export function GardenView() {
-  const [total, setTotal] = useState<number | null>(null);
+  const [data, setData] = useState<{ plants: GardenPlant[]; now: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -13,9 +14,10 @@ export function GardenView() {
     fetch("/api/garden", { cache: "no-store" })
       .then(async (res) => {
         if (!res.ok) throw new Error(`Error ${res.status}`);
-        return (await res.json()) as { plantTotalSeconds: number };
+        return (await res.json()) as { plants: GardenPlant[] };
       })
-      .then((g) => !cancelled && setTotal(g.plantTotalSeconds))
+      // "Ahora" se fija al recibir los datos: Date.now() en el render rompe el prerender.
+      .then((g) => !cancelled && setData({ plants: g.plants, now: Date.now() }))
       .catch(() => !cancelled && setError("No se pudo cargar tu jardín."));
     return () => {
       cancelled = true;
@@ -23,76 +25,62 @@ export function GardenView() {
   }, []);
 
   if (error) return <p role="alert">{error}</p>;
-  if (total === null) return <p role="status">Cargando jardín…</p>;
+  if (!data) return <p role="status">Cargando jardín…</p>;
 
-  const info = growthInfo(total);
-  const percent = Math.round(info.stageProgress * 100);
+  const n = data.plants.length;
+  const days = groupPlantsByDay(data.plants, data.now);
 
   return (
-    <section className="mx-auto flex max-w-md flex-col items-center gap-5 text-center">
-      <h1 className="font-display text-3xl font-semibold tracking-tight">Tu jardín</h1>
-      <div className="relative grid h-72 w-72 place-items-center sm:h-80 sm:w-80">
-        <div className="ground-glow absolute inset-0 rounded-full" aria-hidden="true" />
-        <div className="relative h-[90%] w-[90%] [&_svg]:h-full [&_svg]:w-full">
-          <PlantIllustration key={info.stage} stage={info.stage} fit />
-        </div>
-      </div>
-      <div>
-        <p className="font-display text-2xl font-semibold">{info.name}</p>
-        <p className="text-sm text-muted">
-          {info.units} min de foco acumulados (+{info.partialSeconds}/60 s)
+    <section className="flex flex-col gap-5">
+      <header>
+        <p className="text-sm font-medium text-muted">
+          {n === 1 ? "1 planta florecida" : `${n} plantas florecidas`}
         </p>
-      </div>
+        <h1 className="text-[30px] font-semibold leading-tight">Jardín</h1>
+      </header>
 
-      {info.unitsToNextStage !== null ? (
-        <div className="w-full">
-          <div
-            role="progressbar"
-            aria-label="Progreso hacia la siguiente etapa"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={percent}
-            className="h-3 w-full overflow-hidden rounded-full bg-border"
-          >
-            <div
-              className="h-full bg-leaf transition-[width]"
-              style={{ width: `${percent}%` }}
-            />
+      {n === 0 && (
+        <p className="rounded-[22px] bg-mint p-5 font-medium">
+          Tu jardín está vacío. Completa un pomodoro para que florezca tu primera planta.
+        </p>
+      )}
+
+      {days.map((day) => (
+        <section key={day.key} aria-label={day.label} className="flex flex-col gap-2.5">
+          <div className="flex items-baseline justify-between">
+            <h2 className="text-[15px] font-semibold">{day.label}</h2>
+            <span className="text-sm text-muted">{`${day.totalMinutes} min`}</span>
           </div>
-          <p className="mt-2 text-sm text-muted">
-            {percent}% · Faltan {info.unitsToNextStage} min para «
-            {STAGE_NAMES[info.stage + 1]}»
-          </p>
-        </div>
-      ) : (
-        <p className="text-sm text-muted">¡Tu planta está en su máximo esplendor!</p>
-      )}
-
-      {total === 0 && (
-        <p className="text-sm text-muted">
-          Todavía no hay crecimiento. Completá minutos de foco para verla crecer.
-        </p>
-      )}
-
-      <ol className="grid w-full grid-cols-3 gap-2 text-xs" aria-label="Etapas">
-        {STAGE_NAMES.map((name, i) => {
-          const reached = i <= info.stage;
-          return (
-            <li
-              key={name}
-              className={`rounded-2xl border p-3 ${
-                reached ? "border-leaf bg-surface" : "border-border text-muted"
-              }`}
-            >
-              <span className="block font-medium">
-                {reached ? "✓ " : ""}
-                {name}
-              </span>
-              {i > 0 && i <= MAX_STAGE && <span>{STAGE_THRESHOLDS[i]} min</span>}
-            </li>
-          );
-        })}
-      </ol>
+          <ul className="grid grid-cols-3 gap-2.5">
+            {day.plants.map((p) => {
+              const subject = subjectOf(p.subject);
+              return (
+                <li
+                  key={p.id}
+                  aria-label={[p.title, subject?.name, `${p.minutes} min`]
+                    .filter(Boolean)
+                    .join(" · ")}
+                  className="flex flex-col items-center gap-1.5"
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`grid aspect-square w-full place-items-center rounded-[22px] border-[1.5px] border-ink ${
+                      subject?.bg ?? "bg-mint"
+                    }`}
+                  >
+                    <span className="h-[78%] w-[70%] [&_svg]:h-full [&_svg]:w-full">
+                      <PlantIllustration stage={5} />
+                    </span>
+                  </span>
+                  <span className="line-clamp-2 text-center text-xs leading-tight">
+                    {p.title}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ))}
     </section>
   );
 }

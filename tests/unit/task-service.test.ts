@@ -18,9 +18,29 @@ beforeEach(() => {
 const input = (title: string, over = {}) => ({
   title,
   description: null,
+  subject: null,
+  estimatedPomodoros: 2,
   priority: "medium" as const,
   dueAt: null,
   ...over,
+});
+
+describe("pomodoros completados", () => {
+  it("se derivan del contador inyectado y valen 0 si no hay sesiones", async () => {
+    const withCounts = createTaskService({
+      repo: new MemoryTaskRepository(),
+      newId: () => "id-x",
+      completedByTask: async () => new Map([["id-x", 3]]),
+    });
+    const task = await withCounts.create("a", input("Leer"));
+    expect(task.completedPomodoros).toBe(3);
+    expect((await withCounts.list("a", { sort: "manual" }))[0].completedPomodoros).toBe(
+      3,
+    );
+    expect((await withCounts.get("a", task.id)).completedPomodoros).toBe(3);
+    // Sin contador inyectado, siempre 0.
+    expect((await svc.create("a", input("Otra"))).completedPomodoros).toBe(0);
+  });
 });
 
 describe("crear y listar", () => {

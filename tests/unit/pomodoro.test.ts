@@ -69,8 +69,33 @@ describe("esquemas de ajustes", () => {
         longBreakMinutes: 120,
         longBreakInterval: 12,
         dailyGoalMinutes: 1440,
+        autoStartBreak: false,
+        sound: false,
+        displayName: "x".repeat(40),
+        onboardingDone: true,
       }).success,
     ).toBe(true);
+  });
+
+  it("los ajustes del rediseño tienen valores por defecto", () => {
+    expect(DEFAULT_USER_SETTINGS).toMatchObject({
+      autoStartBreak: true,
+      sound: true,
+      displayName: "",
+      onboardingDone: false,
+    });
+  });
+
+  it.each([
+    ["autoStartBreak", "si"],
+    ["sound", 1],
+    ["onboardingDone", "true"],
+    ["displayName", "x".repeat(41)],
+    ["displayName", 5],
+  ])("rechaza %s = %s", (key, value) => {
+    expect(
+      userSettingsSchema.safeParse({ ...DEFAULT_USER_SETTINGS, [key]: value }).success,
+    ).toBe(false);
   });
 
   it("la actualización parcial acepta subconjuntos pero valida lo que viene", () => {

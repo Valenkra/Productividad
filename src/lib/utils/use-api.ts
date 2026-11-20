@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from "react";
 
-/** GET simple con estados de carga/error. `url` null = no pedir todavía. */
-export function useApi<T>(url: string | null) {
+/**
+ * GET simple con estados de carga/error. `url` null = no pedir todavía.
+ * Cambiar `reloadKey` vuelve a pedir la misma URL (conserva los datos anteriores mientras tanto).
+ */
+export function useApi<T>(url: string | null, reloadKey: string | number = 0) {
   const [result, setResult] = useState<{ url: string; data?: T; error?: string } | null>(
     null,
   );
@@ -22,7 +25,7 @@ export function useApi<T>(url: string | null) {
     return () => {
       cancelled = true;
     };
-  }, [url]);
+  }, [url, reloadKey]);
 
   const current = result && result.url === url ? result : null;
   return {

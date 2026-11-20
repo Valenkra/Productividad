@@ -20,7 +20,7 @@ describe("manifest", () => {
   });
 
   it("start_url y scope válidos dentro del mismo origen", () => {
-    expect(m.start_url).toBe("/dashboard");
+    expect(m.start_url).toBe("/focus");
     expect(m.scope).toBe("/");
     expect(m.id).toBeTruthy();
   });

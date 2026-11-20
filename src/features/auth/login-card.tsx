@@ -35,10 +35,7 @@ export function LoginCard() {
 
         <div className="my-6 h-px bg-border" />
 
-        <Link
-          href="/dashboard"
-          className={`${pill} bg-leaf-strong text-white hover:bg-leaf`}
-        >
+        <Link href="/focus" className={`${pill} bg-leaf-strong text-white hover:bg-leaf`}>
           Probar la app sin cuenta
         </Link>
         <p className="mt-2 text-xs text-muted">

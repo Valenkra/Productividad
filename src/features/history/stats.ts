@@ -26,6 +26,8 @@ export interface Stats {
     date: string;
     focusSeconds: number;
     sessions: number;
+    /** Focos completados que terminaron hoy. */
+    pomodoros: number;
     goalSeconds: number;
     /** 0–1 (tope 1). */
     goalProgress: number;
@@ -104,6 +106,13 @@ export function computeStats(input: {
     (s) => s.creditedSeconds > 0 && dayKey(s.startedAt, timeZone) === todayKey,
   ).length;
 
+  const todayPomodoros = sessions.filter(
+    (s) =>
+      s.mode === "focus" &&
+      s.status === "completed" &&
+      dayKey(s.endedAt ?? s.startedAt, timeZone) === todayKey,
+  ).length;
+
   // Racha: hacia atrás desde hoy (o ayer si hoy todavía no hubo foco).
   let streak = 0;
   let cursor = todaySeconds > 0 ? now : now - DAY_MS;
@@ -118,6 +127,7 @@ export function computeStats(input: {
       date: todayKey,
       focusSeconds: todaySeconds,
       sessions: todaySessions,
+      pomodoros: todayPomodoros,
       goalSeconds: dailyGoalSeconds,
       goalProgress:
         dailyGoalSeconds > 0 ? Math.min(1, todaySeconds / dailyGoalSeconds) : 0,

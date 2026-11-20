@@ -9,6 +9,35 @@
   --leaf: #4f7a4a;
   --leaf-strong: #3a5f37;
   --soil: #8a6a4a;
+
+  /* Rediseño «Pastel juguetón» — paleta Suave (docs/design/README.md) */
+  --ink: #4a3d55;
+  --accent: #e8846a;
+  --accent-hover: #ee9781;
+  --mint: #d6ebdd;
+  --lilac: #ebe5f7;
+  --rest-bg: #f3f0f8;
+  --peach: #f7e3da;
+  --line: #eddfd3;
+  --danger: #b5523b;
+  --subject-calculo: #f2c2b2;
+  --subject-quimica: #cfe6d7;
+  --subject-historia: #e0d9f5;
+  --subject-ingles: #f3e3b8;
+  --prio-high: #e8846a;
+  --prio-medium: #e9c16e;
+  --prio-low: #94c9a8;
+}
+
+/* La app interior (no la landing) usa la paleta Suave y Fredoka. */
+.app-theme {
+  --background: #fbf5ee;
+  --foreground: #4a3d55;
+  --muted: #776a84;
+  --font-geist-sans: var(--font-fredoka);
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-fredoka), system-ui, sans-serif;
 }
 
 @theme inline {
@@ -20,6 +49,22 @@
   --color-leaf: var(--leaf);
   --color-leaf-strong: var(--leaf-strong);
   --color-soil: var(--soil);
+  --color-ink: var(--ink);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-mint: var(--mint);
+  --color-lilac: var(--lilac);
+  --color-rest-bg: var(--rest-bg);
+  --color-peach: var(--peach);
+  --color-line: var(--line);
+  --color-danger: var(--danger);
+  --color-subject-calculo: var(--subject-calculo);
+  --color-subject-quimica: var(--subject-quimica);
+  --color-subject-historia: var(--subject-historia);
+  --color-subject-ingles: var(--subject-ingles);
+  --color-prio-high: var(--prio-high);
+  --color-prio-medium: var(--prio-medium);
+  --color-prio-low: var(--prio-low);
   --font-sans: var(--font-geist-sans);
   --font-display: var(--font-fraunces), Georgia, serif;
 }

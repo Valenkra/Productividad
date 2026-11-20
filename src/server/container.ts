@@ -1,3 +1,4 @@
+import { completedFocusByTask } from "@/features/tasks/domain";
 import { MemoryFocusRepository } from "./repositories/memory-focus-repository";
 import { MemoryTaskRepository } from "./repositories/memory-task-repository";
 import { createFocusService, type FocusService } from "./services/focus-service";
@@ -10,10 +11,16 @@ const g = globalThis as unknown as {
 
 function services() {
   if (!g.services) {
-    const tasks = createTaskService({ repo: new MemoryTaskRepository() });
+    const focusRepo = new MemoryFocusRepository();
+    const tasks = createTaskService({
+      repo: new MemoryTaskRepository(),
+      completedByTask: async (userId) =>
+        completedFocusByTask(await focusRepo.listSessions(userId)),
+    });
     const focus = createFocusService({
-      repo: new MemoryFocusRepository(),
+      repo: focusRepo,
       ownsTask: tasks.ownsTask,
+      describeTasks: tasks.describe,
     });
     g.services = { focus, tasks };
   }

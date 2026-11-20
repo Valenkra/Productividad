@@ -5,8 +5,8 @@ Estado a 2026-11-20. Para retomar en una sesión nueva: leer `CLAUDE.md`, `docs/
 ## Estado actual
 
 - Hechas, todo **local** (sin Supabase): Fases 1 (base), 3 (tareas), 4 (tracking/Pomodoro), 5 (planta), 6 (dashboard/historial/ajustes), 7 (PWA) y la landing en `/`.
-- `npm run verify` limpio: 339 tests, cobertura ~99 % líneas, build OK. `npm run test:e2e` 7/7 (Playwright, build real, puerto 3112).
-- Los cambios de pulido (secciones 1 y 2) están hechos pero **sin commitear**.
+- **Rediseño «Pastel juguetón» (2b) implementado** (2026-11-20, ver abajo). `npm run verify` limpio: 442 tests, build OK. `npm run test:e2e` 7/7.
+- El rediseño está **sin commitear** (el usuario hace los commits).
 - Usuario fijo `local-user` y persistencia en memoria (se pierde al reiniciar el servidor).
 
 ## Reglas que siguen vigentes
@@ -17,7 +17,16 @@ Estado a 2026-11-20. Para retomar en una sesión nueva: leer `CLAUDE.md`, `docs/
 - Verificar lo visual con capturas Playwright, no solo con tests.
 - Entorno Windows: scripts grandes con Write/Edit o `.cjs`; no hay Python; matar servidores solo por PID del puerto (nunca `taskkill /IM node.exe`).
 
-## 1. Pulir la app interior — HECHO (2026-11-20)
+## 0. Rediseño 2b — HECHO (2026-11-20)
+
+Según `docs/design/README.md` (paleta Suave + Fredoka). Pestañas Foco/Tareas/Jardín/Stats; Ajustes desde el engranaje de Foco; `/dashboard` redirige a `/focus` (también `start_url` de la PWA).
+
+- Modelo: la planta crece dentro de cada pomodoro (`sessionStage`, florece solo al completarse); Jardín = una planta por foco completado (`gardenPlants`); Task con `subject` y `estimatedPomodoros` (`completedPomodoros` derivado de sesiones); ajustes `autoStartBreak`, `sound`, `displayName`, `onboardingDone`.
+- Pantallas: Foco/Descanso (rendirse con diálogo, selector de tarea, descanso automático + sonido), Tareas + hoja de edición, Jardín por días, Stats (semana L–D, por materia), Ajustes con contadores e interruptores, Onboarding de 3 pasos con guarda (`OnboardingGate`).
+- Desvíos conscientes: «Meta diaria» se mantiene en Ajustes y en la tarjeta «min hoy» (el diseño no la tenía); materias fijas (Cálculo, Química, Historia, Inglés); la planta usa el SVG existente (`PlantIllustration`), no imágenes.
+- Pendiente: ilustraciones definitivas por etapa (`/public/plants/stage-N.png`) si se quieren; materias editables; transición en fundido entre etapas; la landing y `/login` conservan el estilo anterior (verde + Fraunces).
+
+## 1. Pulir la app interior — REEMPLAZADO por el rediseño 2b
 
 Fraunces, resplandor, tarjetas redondeadas y botones píldora llevados a Inicio, Foco, Jardín, Historial, Ajustes, Tareas y la navegación (barra flotante en móvil, barra lateral con logo en escritorio). Planta protagonista en Foco, Jardín e Inicio. Verificado con capturas a 390×844 y 1280×800, sin scroll horizontal.
 

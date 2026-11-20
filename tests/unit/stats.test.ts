@@ -47,6 +47,21 @@ const run = (items: ReturnType<typeof focus>[], now = NOW, goal = 3600) =>
   });
 
 describe("computeStats", () => {
+  it("cuenta los pomodoros (focos completados) que terminaron hoy", () => {
+    const done = focus(NOW - 2000, 1500);
+    const ayer = focus(NOW - DAY, 1500);
+    const abandonado = focus(NOW - 1000, 300);
+    abandonado.session.status = "abandoned";
+    const items = [done, ayer, abandonado].map((i) => ({
+      ...i,
+      session: {
+        ...i.session,
+        endedAt: i.session.startedAt + i.session.creditedSeconds * 1000,
+      },
+    }));
+    expect(run(items).today.pomodoros).toBe(1);
+  });
+
   it("agrupa por día en la zona horaria del usuario", () => {
     // 01:00 UTC del 10/3 todavía es 22:00 del 9/3 en Buenos Aires
     const lateNight = Date.UTC(2026, 2, 10, 1, 0, 0);

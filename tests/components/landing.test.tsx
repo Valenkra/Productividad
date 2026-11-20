@@ -232,7 +232,7 @@ describe("LoginCard", () => {
     render(<LoginCard />);
     expect(
       screen.getByRole("link", { name: /Probar la app sin cuenta/ }).getAttribute("href"),
-    ).toBe("/dashboard");
+    ).toBe("/focus");
     expect(screen.getByText(/no se guarda de forma permanente/i)).toBeTruthy();
   });
 

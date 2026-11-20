@@ -1,5 +1,6 @@
 import { vi } from "vitest";
 import { ZodError } from "zod";
+import { completedFocusByTask } from "@/features/tasks/domain";
 import { MemoryFocusRepository } from "@/server/repositories/memory-focus-repository";
 import { MemoryTaskRepository } from "@/server/repositories/memory-task-repository";
 import { DomainError } from "@/server/errors";
@@ -21,12 +22,15 @@ export function createTestService() {
     repo: new MemoryTaskRepository(),
     now: () => t,
     newId,
+    completedByTask: async (userId) =>
+      completedFocusByTask(await repo.listSessions(userId)),
   });
   const service = createFocusService({
     repo,
     now: () => t,
     newId,
     ownsTask: tasks.ownsTask,
+    describeTasks: tasks.describe,
   });
   return {
     service,
@@ -95,6 +99,14 @@ export function installFakeApi(
         if (input.startsWith("/api/stats")) {
           const tz = new URL(input, "http://x").searchParams.get("tz") ?? "UTC";
           return json(200, await service.getStats(userId, tz));
+        }
+        if (input.startsWith("/api/garden"))
+          return json(200, await service.getGarden(userId));
+        if (input.startsWith("/api/settings")) {
+          if (method === "PATCH") {
+            return json(200, await service.updateSettings(userId, body));
+          }
+          return json(200, await service.getSettings(userId));
         }
         if (input.startsWith("/api/tasks") && tasks) {
           const url = new URL(input, "http://x");

@@ -1,5 +1,5 @@
-import { HistoryView } from "@/features/history/history-view";
+import { StatsView } from "@/features/history/stats-view";
 
 export default function Page() {
-  return <HistoryView />;
+  return <StatsView />;
 }

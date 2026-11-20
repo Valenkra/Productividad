@@ -1,10 +1,13 @@
 import { AppNav } from "@/components/layout/app-nav";
+import { OnboardingGate } from "@/features/onboarding/onboarding-gate";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="hero-glow flex min-h-screen flex-col md:flex-row">
+    <div className="app-theme isolate min-h-screen">
+      <main className="mx-auto min-h-screen max-w-md px-5 pb-32 pt-6">
+        <OnboardingGate>{children}</OnboardingGate>
+      </main>
       <AppNav />
-      <main className="flex-1 px-4 pb-28 pt-6 md:p-10 md:pb-10">{children}</main>
     </div>
   );
 }
