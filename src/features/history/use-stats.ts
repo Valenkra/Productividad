@@ -11,5 +11,10 @@ export function useStats() {
   const [tz] = useState<string | null>(() =>
     typeof window === "undefined" ? null : browserTimeZone(),
   );
-  return useApi<StatsResponse>(tz ? `/api/stats?tz=${encodeURIComponent(tz)}` : null);
+  const result = useApi<StatsResponse>(
+    tz ? `/api/stats?tz=${encodeURIComponent(tz)}` : null,
+  );
+  // Sin zona (render del servidor) todavía no se pidió nada: es "cargando", no un error.
+  // Así el HTML del servidor coincide con el primer render del cliente (sin error de hidratación).
+  return tz ? result : { ...result, loading: true };
 }
