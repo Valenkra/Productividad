@@ -1,11 +1,21 @@
 import Link from "next/link";
 import { PlantIllustration } from "@/features/garden/plant-illustration";
-import { STAGE_NAMES, STAGE_THRESHOLDS } from "@/features/garden/growth";
+import { MAX_STAGE, STAGE_NAMES } from "@/features/garden/growth";
+import { DEFAULT_POMODORO_SETTINGS } from "@/features/pomodoro/settings";
 import { MiniFocusDemo } from "./mini-focus-demo";
 
 const pill =
   "inline-flex min-h-12 items-center justify-center rounded-full px-7 text-base font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-leaf-strong";
 const cta = `${pill} bg-leaf-strong text-white shadow-[0_12px_30px_-12px_rgba(58,95,55,0.8)] hover:bg-leaf`;
+
+const FOCUS_MINUTES = DEFAULT_POMODORO_SETTINGS.focusMinutes;
+
+/** Minuto del pomodoro en que empieza cada etapa (una cada quinto; florece al terminar). */
+function stageWhen(stage: number): string {
+  if (stage === 0) return "Al empezar";
+  if (stage === MAX_STAGE) return "Al terminar";
+  return `${(stage * FOCUS_MINUTES) / MAX_STAGE} min`;
+}
 
 const STEPS = [
   {
@@ -113,8 +123,8 @@ export function LandingPage() {
               Tu planta crece con vos
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-center text-muted">
-              De semilla a flor: {STAGE_THRESHOLDS[STAGE_THRESHOLDS.length - 1]} minutos
-              de foco real para verla florecer.
+              De semilla a flor en un solo pomodoro de {FOCUS_MINUTES} minutos de foco
+              real. Si lo terminás, florece y se queda en tu jardín.
             </p>
             <ol className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
               {STAGE_NAMES.map((name, i) => (
@@ -124,9 +134,7 @@ export function LandingPage() {
                 >
                   <PlantIllustration stage={i} size={84} />
                   <span className="mt-2 font-display text-lg font-semibold">{name}</span>
-                  <span className="text-sm text-muted">
-                    {i === 0 ? "Al empezar" : `${STAGE_THRESHOLDS[i]} min`}
-                  </span>
+                  <span className="text-sm text-muted">{stageWhen(i)}</span>
                 </li>
               ))}
             </ol>

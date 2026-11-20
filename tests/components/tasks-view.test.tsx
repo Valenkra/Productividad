@@ -43,7 +43,7 @@ const writes = () => api.calls.filter((c) => c.method !== "GET");
 
 beforeEach(() => {
   ctx = createTestService();
-  api = installFakeApi(ctx.service, "u", ctx.tasks);
+  api = installFakeApi(ctx);
 });
 afterEach(() => {
   cleanup();
@@ -182,7 +182,7 @@ describe("TasksView: hoja de edición", () => {
   });
 
   it("usa la duración de foco de los ajustes para el total de minutos", async () => {
-    await ctx.service.updateSettings("u", { focusMinutes: 50 });
+    await ctx.settings.updateSettings("u", { focusMinutes: 50 });
     render(<TasksView />);
     fireEvent.click(await screen.findByRole("button", { name: "Añadir tarea" }));
     expect(await screen.findByText("100 min")).toBeTruthy();

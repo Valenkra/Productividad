@@ -24,7 +24,7 @@ beforeEach(() => {
   push.mockClear();
   replace.mockClear();
   ctx = createTestService();
-  api = installFakeApi(ctx.service, "u", ctx.tasks);
+  api = installFakeApi(ctx);
 });
 afterEach(() => {
   cleanup();
@@ -83,7 +83,7 @@ describe("OnboardingFlow", () => {
         onboardingDone: true,
       },
     ]);
-    expect(await ctx.service.getSettings("u")).toMatchObject({
+    expect(await ctx.settings.getSettings("u")).toMatchObject({
       displayName: "Vale",
       focusMinutes: 50,
       onboardingDone: true,
@@ -129,12 +129,26 @@ describe("OnboardingGate", () => {
         <p>contenido</p>
       </OnboardingGate>,
     );
-    expect(screen.getByText("contenido")).toBeTruthy();
+    // Mientras cargan los ajustes no se muestra la app (antes parpadeaba Foco).
+    expect(screen.queryByText("contenido")).toBeNull();
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/onboarding"));
+    expect(screen.queryByText("contenido")).toBeNull();
+  });
+
+  it("muestra un estado de carga y luego el contenido si ya lo completó", async () => {
+    await ctx.settings.updateSettings("u", { onboardingDone: true });
+    render(
+      <OnboardingGate>
+        <p>contenido</p>
+      </OnboardingGate>,
+    );
+    expect(screen.getByRole("status").textContent).toMatch(/Cargando/);
+    expect(await screen.findByText("contenido")).toBeTruthy();
+    expect(replace).not.toHaveBeenCalled();
   });
 
   it("no redirige si ya lo completó o si los ajustes no cargan", async () => {
-    await ctx.service.updateSettings("u", { onboardingDone: true });
+    await ctx.settings.updateSettings("u", { onboardingDone: true });
     const { unmount } = render(
       <OnboardingGate>
         <p>contenido</p>
@@ -142,7 +156,7 @@ describe("OnboardingGate", () => {
     );
     await waitFor(() => expect(api.calls.length).toBeGreaterThan(0));
     unmount();
-    await ctx.service.updateSettings("u", { onboardingDone: false });
+    await ctx.settings.updateSettings("u", { onboardingDone: false });
     api.failNext(1);
     render(
       <OnboardingGate>
@@ -152,5 +166,7 @@ describe("OnboardingGate", () => {
     await waitFor(() => expect(api.calls.length).toBe(2));
     await new Promise((r) => setTimeout(r, 20));
     expect(replace).not.toHaveBeenCalled();
+    // Si los ajustes fallan, la app no queda bloqueada.
+    expect(screen.getByText("contenido")).toBeTruthy();
   });
 });

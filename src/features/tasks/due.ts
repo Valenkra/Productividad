@@ -1,3 +1,4 @@
+import { isOpenTask } from "./domain";
 import type { Task } from "./types";
 
 export type DueChip = "today" | "tomorrow" | "week" | "none";
@@ -59,10 +60,5 @@ export function dueLabel(dueAt: number | null, now: number): string {
 /** Abiertas que vencen hoy o ya vencieron. */
 export function countDueToday(tasks: Task[], now: number): number {
   const end = endOfDayFrom(now, 0);
-  return tasks.filter(
-    (t) =>
-      (t.status === "todo" || t.status === "in_progress") &&
-      t.dueAt !== null &&
-      t.dueAt <= end,
-  ).length;
+  return tasks.filter((t) => isOpenTask(t) && t.dueAt !== null && t.dueAt <= end).length;
 }

@@ -188,13 +188,18 @@ describe("LandingPage", () => {
     ).toHaveLength(1);
   });
 
-  it("muestra las 6 etapas de la planta con sus minutos reales", () => {
+  it("muestra las 6 etapas de la planta dentro de un pomodoro de 25 min (modelo 2b)", () => {
     render(<LandingPage />);
     const section = screen.getByRole("region", { name: /Tu planta crece con vos/ });
     const items = within(section).getAllByRole("listitem");
     expect(items).toHaveLength(6);
-    expect(within(section).getByText("Florecida")).toBeTruthy();
-    expect(within(items[5]).getByText("180 min")).toBeTruthy();
+    expect(within(section).getByText(/en un solo pomodoro de 25 minutos/)).toBeTruthy();
+    expect(within(items[0]).getByText("Al empezar")).toBeTruthy();
+    expect(within(items[1]).getByText("5 min")).toBeTruthy();
+    expect(within(items[4]).getByText("20 min")).toBeTruthy();
+    expect(within(items[5]).getByText("Florecida")).toBeTruthy();
+    expect(within(items[5]).getByText("Al terminar")).toBeTruthy();
+    expect(within(section).queryByText("180 min")).toBeNull();
   });
 
   it("es honesta sobre cómo se cuenta el tiempo", () => {

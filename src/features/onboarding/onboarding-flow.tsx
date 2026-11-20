@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { btnPrimary, card, field, focusRing } from "@/components/ui/styles";
 import { PlantIllustration } from "@/features/garden/plant-illustration";
+import { patchSettings } from "@/features/settings/api";
 import type { UserSettings } from "@/features/settings/schema";
 
 const RHYTHMS = [
@@ -40,12 +41,7 @@ export function OnboardingFlow() {
     setSaving(true);
     setProblem(null);
     try {
-      const res = await fetch("/api/settings", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...patch, onboardingDone: true }),
-      });
-      if (!res.ok) throw new Error();
+      await patchSettings({ ...patch, onboardingDone: true });
       router.push("/focus");
     } catch {
       setProblem("No se pudo guardar. Prueba de nuevo.");
@@ -171,7 +167,7 @@ export function OnboardingFlow() {
                       aria-checked={on}
                       onClick={() => setRhythm(r.id)}
                       className={`flex min-h-16 items-center justify-between rounded-[20px] border-[1.5px] border-ink px-5 text-left transition-colors ${
-                        on ? "bg-[#f7e3da]" : "bg-white hover:bg-peach"
+                        on ? "bg-peach" : "bg-white hover:bg-peach"
                       } ${focusRing}`}
                     >
                       <span className="text-[17px] font-semibold">{r.name}</span>

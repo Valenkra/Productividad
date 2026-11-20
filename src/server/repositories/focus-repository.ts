@@ -4,8 +4,6 @@ import type {
   FocusSession,
 } from "@/features/focus-tracking/types";
 
-import type { UserSettings } from "@/features/settings/schema";
-
 export interface UserProgress {
   plantTotalSeconds: number;
   /** Bloques de foco completados desde el último descanso largo. */
@@ -42,6 +40,4 @@ export interface FocusRepository {
   /** Todas las sesiones/intervalos del usuario (en Supabase: paginar o agregar en SQL). */
   listSessions(userId: string): Promise<FocusSession[]>;
   listIntervals(userId: string): Promise<FocusInterval[]>;
-  getSettings(userId: string): Promise<UserSettings>;
-  saveSettings(userId: string, settings: UserSettings): Promise<void>;
 }

@@ -2,10 +2,12 @@
 
 import { Check, Play, Plus } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { card, focusRing } from "@/components/ui/styles";
-import type { UserSettings } from "@/features/settings/schema";
+import { useSettings } from "@/features/settings/settings-context";
 import { useApi } from "@/lib/utils/use-api";
+import { updateTask } from "./api";
+import { isOpenTask } from "./domain";
 import { countDueToday, dueLabel } from "./due";
 import { subjectOf } from "./subjects";
 import { TaskSheet } from "./task-sheet";
@@ -17,51 +19,25 @@ const PRIORITY: Record<TaskPriority, { label: string; dot: string }> = {
   high: { label: "alta", dot: "bg-prio-high" },
 };
 
-const isOpen = (t: TaskWithProgress) => t.status === "todo" || t.status === "in_progress";
-
 type Sheet = { task: TaskWithProgress | null } | null;
 
 export function TasksView() {
-  const [tasks, setTasks] = useState<TaskWithProgress[] | null>(null);
-  const [loadError, setLoadError] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [version, setVersion] = useState(0);
   const [sheet, setSheet] = useState<Sheet>(null);
-  // "Ahora" se fija al recibir los datos (en el cliente): Date.now() en el render rompe el prerender.
-  const [now, setNow] = useState(0);
-  const settings = useApi<UserSettings>("/api/settings");
-  const focusMinutes = settings.data?.focusMinutes ?? 25;
+  const focusMinutes = useSettings().settings?.focusMinutes ?? 25;
 
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/tasks?status=all", { cache: "no-store" })
-      .then(async (res) => {
-        if (!res.ok) throw new Error();
-        return (await res.json()) as { tasks: TaskWithProgress[] };
-      })
-      .then((body) => {
-        if (cancelled) return;
-        setTasks(body.tasks.filter((t) => t.status !== "archived"));
-        setNow(Date.now());
-        setLoadError(false);
-      })
-      .catch(() => !cancelled && setLoadError(true));
-    return () => {
-      cancelled = true;
-    };
-  }, [version]);
+  // "Ahora" = cuando llegaron los datos: Date.now() en el render rompe el prerender.
+  const list = useApi<{ tasks: TaskWithProgress[] }>("/api/tasks?status=all", version);
+  const now = list.receivedAt;
+  const tasks = list.data?.tasks.filter((t) => t.status !== "archived") ?? null;
 
   const reload = useCallback(() => setVersion((v) => v + 1), []);
   const closeSheet = useCallback(() => setSheet(null), []);
 
   async function toggle(task: TaskWithProgress) {
     try {
-      const res = await fetch(`/api/tasks/${task.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: isOpen(task) ? "done" : "todo" }),
-      });
-      if (!res.ok) throw new Error();
+      await updateTask(task.id, { status: isOpenTask(task) ? "done" : "todo" });
       setActionError(null);
       reload();
     } catch {
@@ -70,14 +46,14 @@ export function TasksView() {
   }
 
   if (tasks === null) {
-    return loadError ? (
+    return list.error ? (
       <p role="alert">No se pudieron cargar las tareas.</p>
     ) : (
       <p role="status">Cargando tareas…</p>
     );
   }
 
-  const open = tasks.filter(isOpen);
+  const open = tasks.filter(isOpenTask);
   const finished = tasks.filter((t) => t.status === "done");
 
   return (
@@ -179,7 +155,7 @@ export function TasksView() {
               <li
                 key={t.id}
                 data-title={t.title}
-                className="flex items-center gap-3 rounded-[22px] bg-[#fbe9db] p-3"
+                className="flex items-center gap-3 rounded-[22px] bg-done-bg p-3"
               >
                 <button
                   type="button"
@@ -187,14 +163,14 @@ export function TasksView() {
                   aria-checked
                   aria-label={`Reabrir ${t.title}`}
                   onClick={() => void toggle(t)}
-                  className={`grid size-[30px] shrink-0 place-items-center rounded-[10px] border-[1.5px] border-ink bg-[#7fcf9f] ${focusRing}`}
+                  className={`grid size-[30px] shrink-0 place-items-center rounded-[10px] border-[1.5px] border-ink bg-switch-on ${focusRing}`}
                 >
                   <Check size={18} strokeWidth={3} aria-hidden="true" />
                 </button>
-                <span className="min-w-0 flex-1 truncate text-base font-medium text-[#8a7598] line-through">
+                <span className="min-w-0 flex-1 truncate text-base font-medium text-done-text line-through">
                   {t.title}
                 </span>
-                <span className="text-sm text-[#8a7598]">
+                <span className="text-sm text-done-text">
                   {`${t.completedPomodoros}/${t.estimatedPomodoros}`}
                 </span>
               </li>

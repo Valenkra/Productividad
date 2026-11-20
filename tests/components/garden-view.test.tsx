@@ -10,7 +10,7 @@ beforeEach(() => {
   ctx = createTestService();
   // El jardín agrupa por día respecto de "ahora": el reloj del navegador sigue al del servidor.
   vi.spyOn(Date, "now").mockImplementation(() => ctx.now());
-  installFakeApi(ctx.service, "u", ctx.tasks);
+  installFakeApi(ctx);
 });
 afterEach(() => {
   cleanup();

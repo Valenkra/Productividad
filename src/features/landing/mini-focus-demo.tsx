@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { PlantIllustration } from "@/features/garden/plant-illustration";
+import { formatClock } from "@/lib/time/format";
 import { useMiniFocus } from "./use-mini-focus";
 
 const RING_R = 118;
@@ -11,12 +12,6 @@ const pill =
   "inline-flex min-h-12 items-center justify-center rounded-full px-6 text-base font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-leaf-strong";
 const primary = `${pill} bg-leaf-strong text-white hover:bg-leaf`;
 const ghost = `${pill} border border-border bg-surface text-foreground hover:bg-background`;
-
-function mmss(total: number) {
-  const m = Math.floor(total / 60);
-  const s = total % 60;
-  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-}
 
 export function MiniFocusDemo() {
   const demo = useMiniFocus();
@@ -88,7 +83,7 @@ export function MiniFocusDemo() {
         aria-label="Tiempo restante del mini-foco"
         className="mt-1 text-center font-display text-5xl font-semibold tabular-nums tracking-tight sm:mt-2 sm:text-6xl"
       >
-        {mmss(demo.remainingSeconds)}
+        {formatClock(demo.remainingSeconds)}
       </p>
 
       <p

@@ -19,8 +19,8 @@ const DAY_NAMES: Record<string, string> = {
 
 const BAR_COLOR: Record<WeekBar["kind"], string> = {
   today: "bg-accent",
-  past: "bg-[#f4cbbd]",
-  future: "bg-[#f6ece4]",
+  past: "bg-bar-past",
+  future: "bg-track",
 };
 
 export function StatsView() {
@@ -114,7 +114,7 @@ export function StatsView() {
                   <span className="font-medium">{s.name}</span>
                   <span className="text-muted">{`${s.minutes} min`}</span>
                 </span>
-                <span aria-hidden="true" className="h-3 rounded-full bg-[#f6ece4]">
+                <span aria-hidden="true" className="h-3 rounded-full bg-track">
                   <span
                     className={`block h-full rounded-full border-[1.5px] border-ink ${
                       subjectOf(s.subject)?.bg ?? "bg-line"

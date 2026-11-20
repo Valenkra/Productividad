@@ -1,31 +1,22 @@
-import { completedFocusByTask } from "@/features/tasks/domain";
 import { MemoryFocusRepository } from "./repositories/memory-focus-repository";
+import { MemorySettingsRepository } from "./repositories/memory-settings-repository";
 import { MemoryTaskRepository } from "./repositories/memory-task-repository";
-import { createFocusService, type FocusService } from "./services/focus-service";
-import { createTaskService, type TaskService } from "./services/task-service";
+import { createServices, type Services } from "./services";
 
 // Sobreviven al hot-reload de desarrollo; en producción son singletons del proceso.
-const g = globalThis as unknown as {
-  services?: { focus: FocusService; tasks: TaskService };
-};
+const g = globalThis as unknown as { services?: Services };
 
-function services() {
-  if (!g.services) {
-    const focusRepo = new MemoryFocusRepository();
-    const tasks = createTaskService({
-      repo: new MemoryTaskRepository(),
-      completedByTask: async (userId) =>
-        completedFocusByTask(await focusRepo.listSessions(userId)),
-    });
-    const focus = createFocusService({
-      repo: focusRepo,
-      ownsTask: tasks.ownsTask,
-      describeTasks: tasks.describe,
-    });
-    g.services = { focus, tasks };
-  }
+function services(): Services {
+  g.services ??= createServices({
+    focusRepo: new MemoryFocusRepository(),
+    taskRepo: new MemoryTaskRepository(),
+    settingsRepo: new MemorySettingsRepository(),
+  });
   return g.services;
 }
 
-export const getFocusService = (): FocusService => services().focus;
-export const getTaskService = (): TaskService => services().tasks;
+export const getFocusService = () => services().focus;
+export const getTaskService = () => services().tasks;
+export const getSettingsService = () => services().settings;
+export const getStatsService = () => services().stats;
+export const getGardenService = () => services().garden;

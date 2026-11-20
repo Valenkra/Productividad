@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Fredoka, Geist, Geist_Mono } from "next/font/google";
+import { Fraunces, Fredoka, Geist } from "next/font/google";
 import { OfflineBanner } from "@/features/pwa/offline-banner";
 import { SwRegister } from "@/features/pwa/sw-register";
 import { PWA } from "@/lib/pwa/config";
@@ -21,11 +21,6 @@ const fredoka = Fredoka({
   weight: ["400", "500", "600", "700"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
   title: PWA.name,
   description: PWA.description,
@@ -42,7 +37,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="es"
-      className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} ${fredoka.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${fraunces.variable} ${fredoka.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <OfflineBanner />

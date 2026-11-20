@@ -130,7 +130,7 @@ describe("getGarden en el servidor", () => {
       ctx.advance(15);
       await ctx.service.heartbeat("u", s!.id, `g-${i}-xxxxxx`);
     }
-    const garden = await ctx.service.getGarden("u");
+    const garden = await ctx.garden.getGarden("u");
     expect(garden.plants).toEqual([
       expect.objectContaining({ title: "Derivadas", subject: "calculo", minutes: 25 }),
     ]);

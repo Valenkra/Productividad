@@ -27,6 +27,17 @@
   --prio-high: #e8846a;
   --prio-medium: #e9c16e;
   --prio-low: #94c9a8;
+  /* Tonos de apoyo (antes valores sueltos en los componentes) */
+  --overlay: rgba(74, 61, 85, 0.45);
+  --rest-card: #e3dcf3;
+  --track: #f6ece4;
+  --dashed-line: #c9b8d6;
+  --done-bg: #fbe9db;
+  --done-text: #8a7598;
+  --bar-past: #f4cbbd;
+  --segment: #fbe3d4;
+  --chip-line: #ead6c8;
+  --switch-on: #7fcf9f;
 }
 
 /* La app interior (no la landing) usa la paleta Suave y Fredoka. */
@@ -65,6 +76,16 @@
   --color-prio-high: var(--prio-high);
   --color-prio-medium: var(--prio-medium);
   --color-prio-low: var(--prio-low);
+  --color-overlay: var(--overlay);
+  --color-rest-card: var(--rest-card);
+  --color-track: var(--track);
+  --color-dashed-line: var(--dashed-line);
+  --color-done-bg: var(--done-bg);
+  --color-done-text: var(--done-text);
+  --color-bar-past: var(--bar-past);
+  --color-segment: var(--segment);
+  --color-chip-line: var(--chip-line);
+  --color-switch-on: var(--switch-on);
   --font-sans: var(--font-geist-sans);
   --font-display: var(--font-fraunces), Georgia, serif;
 }

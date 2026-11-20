@@ -8,32 +8,15 @@ import {
   reconcile,
   resume,
 } from "@/features/focus-tracking/domain";
-import type { FocusMode, FocusSession } from "@/features/focus-tracking/types";
-import { nextMode, plannedSecondsFor } from "@/features/pomodoro/sequence";
-import { computeStats, isValidTimeZone } from "@/features/history/stats";
-import { gardenPlants, type GardenPlant, type TaskInfo } from "@/features/garden/plants";
-import type { UserSettings } from "@/features/settings/schema";
-import type { FocusRepository, UserProgress } from "../repositories/focus-repository";
-
-export { DomainError };
-
-export interface FocusState {
-  session: FocusSession | null;
-  plantTotalSeconds: number;
-  nextMode: FocusMode;
-  nextPlannedSeconds: number;
-  /** Focos completados desde el último descanso largo. */
-  cycleFocusCount: number;
-  /** Hora del servidor, para que el cliente calcule su desfase. */
-  serverNow: number;
-}
-
-export interface HeartbeatResponse extends FocusState {
-  result: "credited" | "duplicate" | "too_soon" | "stale_paused" | "not_active";
-  creditedSeconds: number;
-}
-
-type CycleProgress = Pick<UserProgress, "cycleFocusCount" | "lastMode">;
+import type {
+  FocusMode,
+  FocusSession,
+  FocusState,
+  HeartbeatResponse,
+} from "@/features/focus-tracking/types";
+import { cycleAfter, nextMode, plannedSecondsFor } from "@/features/pomodoro/sequence";
+import { DEFAULT_USER_SETTINGS, type UserSettings } from "@/features/settings/schema";
+import type { FocusRepository } from "../repositories/focus-repository";
 
 export function createFocusService(deps: {
   repo: FocusRepository;
@@ -41,31 +24,14 @@ export function createFocusService(deps: {
   newId?: () => string;
   /** ¿La tarea existe y es del usuario? Si no se inyecta, ninguna tarea es válida. */
   ownsTask?: (userId: string, taskId: string) => Promise<boolean>;
-  /** Título y materia de las tareas del usuario, para las plantas del jardín. */
-  describeTasks?: (userId: string) => Promise<Map<string, TaskInfo>>;
+  /** Ajustes del usuario (duraciones y ciclo). Por defecto, los valores de fábrica. */
+  getSettings?: (userId: string) => Promise<UserSettings>;
 }) {
   const { repo } = deps;
   const ownsTask = deps.ownsTask ?? (async () => false);
   const now = deps.now ?? Date.now;
   const newId = deps.newId ?? randomUUID;
-
-  /** Qué pasa con el ciclo Pomodoro cuando una sesión termina. */
-  function cycleAfter(session: FocusSession, p: UserProgress): CycleProgress {
-    if (session.status === "completed") {
-      if (session.mode === "focus") {
-        return { cycleFocusCount: p.cycleFocusCount + 1, lastMode: "focus" };
-      }
-      return {
-        cycleFocusCount: session.mode === "long_break" ? 0 : p.cycleFocusCount,
-        lastMode: session.mode,
-      };
-    }
-    // Abandonada: saltar un foco no habilita descanso; saltar un descanso vuelve a foco.
-    return {
-      cycleFocusCount: session.mode === "long_break" ? 0 : p.cycleFocusCount,
-      lastMode: session.mode === "focus" ? null : session.mode,
-    };
-  }
+  const getSettings = deps.getSettings ?? (async () => DEFAULT_USER_SETTINGS);
 
   /** Carga la sesión del usuario aplicando el timeout conservador y persistiéndolo. */
   async function load(userId: string, id: string): Promise<FocusSession> {
@@ -85,7 +51,7 @@ export function createFocusService(deps: {
     session: FocusSession | null,
   ): Promise<FocusState> {
     const p = await repo.getProgress(userId);
-    const settings = await repo.getSettings(userId);
+    const settings = await getSettings(userId);
     const next = nextMode(p.cycleFocusCount, p.lastMode, settings);
     return {
       session,
@@ -98,54 +64,6 @@ export function createFocusService(deps: {
   }
 
   return {
-    /** Jardín: una planta por foco completado, más el total histórico de segundos válidos. */
-    async getGarden(
-      userId: string,
-    ): Promise<{ plantTotalSeconds: number; plants: GardenPlant[] }> {
-      const [p, sessions, tasks] = await Promise.all([
-        repo.getProgress(userId),
-        repo.listSessions(userId),
-        deps.describeTasks?.(userId) ?? Promise.resolve(new Map<string, TaskInfo>()),
-      ]);
-      return {
-        plantTotalSeconds: p.plantTotalSeconds,
-        plants: gardenPlants(sessions, tasks),
-      };
-    },
-
-    getSettings: (userId: string): Promise<UserSettings> => repo.getSettings(userId),
-
-    async updateSettings(
-      userId: string,
-      patch: Partial<UserSettings>,
-    ): Promise<UserSettings> {
-      const next = { ...(await repo.getSettings(userId)), ...patch };
-      await repo.saveSettings(userId, next);
-      return next;
-    },
-
-    async getStats(userId: string, timeZone: string) {
-      if (!isValidTimeZone(timeZone)) {
-        throw new DomainError("invalid_timezone", 400, "Zona horaria inválida");
-      }
-      const [sessions, intervals, settings, progress] = await Promise.all([
-        repo.listSessions(userId),
-        repo.listIntervals(userId),
-        repo.getSettings(userId),
-        repo.getProgress(userId),
-      ]);
-      return {
-        ...computeStats({
-          sessions,
-          intervals,
-          timeZone,
-          now: now(),
-          dailyGoalSeconds: settings.dailyGoalMinutes * 60,
-        }),
-        plantTotalSeconds: progress.plantTotalSeconds,
-      };
-    },
-
     async getActive(userId: string): Promise<FocusState> {
       const open = await repo.getOpenSession(userId);
       return state(userId, open ? await persistReconciled(open) : null);
@@ -164,7 +82,7 @@ export function createFocusService(deps: {
         throw new DomainError("task_not_found", 404, "Tarea no encontrada");
       }
       const p = await repo.getProgress(userId);
-      const settings = await repo.getSettings(userId);
+      const settings = await getSettings(userId);
       const expected = nextMode(p.cycleFocusCount, p.lastMode, settings);
       const mode = input.mode ?? expected;
       const session = createSession({
@@ -222,7 +140,7 @@ export function createFocusService(deps: {
           plantSeconds: session.mode === "focus" ? outcome.creditedSeconds : 0,
           progress:
             outcome.session.status === "completed"
-              ? cycleAfter(outcome.session, p)
+              ? cycleAfter(outcome.session, p.cycleFocusCount)
               : undefined,
         });
       }
@@ -267,7 +185,10 @@ export function createFocusService(deps: {
         );
       }
       const p = await repo.getProgress(userId);
-      await repo.saveSession(result.session, cycleAfter(result.session, p));
+      await repo.saveSession(
+        result.session,
+        cycleAfter(result.session, p.cycleFocusCount),
+      );
       return state(userId, result.session);
     },
   };

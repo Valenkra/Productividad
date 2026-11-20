@@ -95,7 +95,7 @@ describe("tiempo por tarea", () => {
     await studyFor(a.id, 20);
     await studyFor(b.id, 10);
     await studyFor(a.id, 5);
-    const stats = await ctx.service.getStats(U, "UTC");
+    const stats = await ctx.stats.getStats(U, "UTC");
     expect(stats.perTask).toEqual([
       { taskId: a.id, focusSeconds: 25 },
       { taskId: b.id, focusSeconds: 10 },
@@ -109,6 +109,6 @@ describe("tiempo por tarea", () => {
     ctx.advance(15);
     const r = await ctx.service.heartbeat(U, session!.id, "clave-0001");
     expect(r.creditedSeconds).toBe(15);
-    expect((await ctx.service.getStats(U, "UTC")).perTask[0].focusSeconds).toBe(15);
+    expect((await ctx.stats.getStats(U, "UTC")).perTask[0].focusSeconds).toBe(15);
   });
 });

@@ -1,34 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { subjectOf } from "@/features/tasks/subjects";
 import { PlantIllustration } from "./plant-illustration";
+import { useApi } from "@/lib/utils/use-api";
 import { groupPlantsByDay, type GardenPlant } from "./plants";
 
 export function GardenView() {
-  const [data, setData] = useState<{ plants: GardenPlant[]; now: number } | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // "Ahora" = cuando llegaron los datos: Date.now() en el render rompe el prerender.
+  const { data, error, receivedAt } = useApi<{ plants: GardenPlant[] }>("/api/garden");
 
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/garden", { cache: "no-store" })
-      .then(async (res) => {
-        if (!res.ok) throw new Error(`Error ${res.status}`);
-        return (await res.json()) as { plants: GardenPlant[] };
-      })
-      // "Ahora" se fija al recibir los datos: Date.now() en el render rompe el prerender.
-      .then((g) => !cancelled && setData({ plants: g.plants, now: Date.now() }))
-      .catch(() => !cancelled && setError("No se pudo cargar tu jardín."));
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  if (error) return <p role="alert">{error}</p>;
+  if (error) return <p role="alert">No se pudo cargar tu jardín.</p>;
   if (!data) return <p role="status">Cargando jardín…</p>;
 
   const n = data.plants.length;
-  const days = groupPlantsByDay(data.plants, data.now);
+  const days = groupPlantsByDay(data.plants, receivedAt);
 
   return (
     <section className="flex flex-col gap-5">

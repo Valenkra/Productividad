@@ -1,7 +1,7 @@
 import { vi } from "vitest";
 import { ZodError } from "zod";
-import { completedFocusByTask } from "@/features/tasks/domain";
 import { MemoryFocusRepository } from "@/server/repositories/memory-focus-repository";
+import { MemorySettingsRepository } from "@/server/repositories/memory-settings-repository";
 import { MemoryTaskRepository } from "@/server/repositories/memory-task-repository";
 import { DomainError } from "@/server/errors";
 import {
@@ -9,8 +9,7 @@ import {
   listQuerySchema,
   updateTaskSchema,
 } from "@/features/tasks/schema";
-import { createFocusService } from "@/server/services/focus-service";
-import { createTaskService } from "@/server/services/task-service";
+import { createServices } from "@/server/services";
 
 /** Servicios reales + repositorios en memoria + reloj controlable. */
 export function createTestService() {
@@ -18,23 +17,19 @@ export function createTestService() {
   let n = 0;
   const newId = () => `00000000-0000-4000-8000-${String(++n).padStart(12, "0")}`;
   const repo = new MemoryFocusRepository();
-  const tasks = createTaskService({
-    repo: new MemoryTaskRepository(),
+  const services = createServices({
+    focusRepo: repo,
+    taskRepo: new MemoryTaskRepository(),
+    settingsRepo: new MemorySettingsRepository(),
     now: () => t,
     newId,
-    completedByTask: async (userId) =>
-      completedFocusByTask(await repo.listSessions(userId)),
-  });
-  const service = createFocusService({
-    repo,
-    now: () => t,
-    newId,
-    ownsTask: tasks.ownsTask,
-    describeTasks: tasks.describe,
   });
   return {
-    service,
-    tasks,
+    service: services.focus,
+    tasks: services.tasks,
+    settings: services.settings,
+    stats: services.stats,
+    garden: services.garden,
     repo,
     now: () => t,
     advance: (seconds: number) => {
@@ -43,7 +38,7 @@ export function createTestService() {
   };
 }
 
-type TestService = ReturnType<typeof createTestService>["service"];
+type TestContext = ReturnType<typeof createTestService>;
 
 export interface FakeApi {
   calls: { url: string; method: string; body: unknown }[];
@@ -57,11 +52,8 @@ export interface FakeApi {
  * Sustituye `fetch` por una implementación que enruta a los servicios reales
  * (mismas reglas de negocio que los endpoints), para probar el cliente sin red.
  */
-export function installFakeApi(
-  service: TestService,
-  userId = "u",
-  tasks?: ReturnType<typeof createTestService>["tasks"],
-): FakeApi {
+export function installFakeApi(ctx: TestContext, userId = "u"): FakeApi {
+  const { service, tasks, settings, stats, garden } = ctx;
   const api: FakeApi = {
     calls: [],
     failNext(count) {
@@ -98,17 +90,17 @@ export function installFakeApi(
       try {
         if (input.startsWith("/api/stats")) {
           const tz = new URL(input, "http://x").searchParams.get("tz") ?? "UTC";
-          return json(200, await service.getStats(userId, tz));
+          return json(200, await stats.getStats(userId, tz));
         }
         if (input.startsWith("/api/garden"))
-          return json(200, await service.getGarden(userId));
+          return json(200, await garden.getGarden(userId));
         if (input.startsWith("/api/settings")) {
           if (method === "PATCH") {
-            return json(200, await service.updateSettings(userId, body));
+            return json(200, await settings.updateSettings(userId, body));
           }
-          return json(200, await service.getSettings(userId));
+          return json(200, await settings.getSettings(userId));
         }
-        if (input.startsWith("/api/tasks") && tasks) {
+        if (input.startsWith("/api/tasks")) {
           const url = new URL(input, "http://x");
           const id = url.pathname.split("/")[3];
           if (!id && method === "GET") {

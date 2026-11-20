@@ -4,7 +4,7 @@ import {
   heartbeatSchema,
   startSessionSchema,
 } from "@/lib/validation/focus";
-import { formatDayLabel, formatMinutes } from "@/lib/time/format";
+import { formatClock } from "@/lib/time/format";
 
 describe("esquemas de sesión", () => {
   it("el heartbeat solo acepta una clave de idempotencia (nunca segundos)", () => {
@@ -39,24 +39,15 @@ describe("esquemas de sesión", () => {
   });
 });
 
-describe("formatMinutes", () => {
+describe("formatClock", () => {
   it.each([
-    [0, "0 min"],
-    [29, "0 min"],
-    [30, "1 min"],
-    [60, "1 min"],
-    [3540, "59 min"],
-    [3600, "1 h 00 min"],
-    [3660, "1 h 01 min"],
-    [7500, "2 h 05 min"],
+    [0, "00:00"],
+    [9, "00:09"],
+    [60, "01:00"],
+    [1500, "25:00"],
+    [1122, "18:42"],
+    [6000, "100:00"],
   ])("%s s → %s", (seconds, expected) => {
-    expect(formatMinutes(seconds)).toBe(expected);
-  });
-});
-
-describe("formatDayLabel", () => {
-  it("no cambia de día por la zona horaria del equipo", () => {
-    expect(formatDayLabel("2026-03-10")).toMatch(/10/);
-    expect(formatDayLabel("2026-03-01")).toMatch(/1/);
+    expect(formatClock(seconds)).toBe(expected);
   });
 });

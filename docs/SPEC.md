@@ -203,6 +203,11 @@ cliente, protegida por RLS.
 
 ## 4. Estructura del repositorio
 
+> **Nota (2026-11-20):** este árbol es el plan inicial. La estructura real está en el
+> `README.md`. Diferencias: en Next 16 es `proxy.ts` (no `middleware.ts`); el heartbeat vive en
+> `api/focus-sessions/[id]/heartbeat`; hay además `features/{onboarding,landing,pwa}`,
+> `lib/http` y los servicios `settings`, `stats` y `garden` en `server/services`.
+
 Organizar el código por dominios funcionales, no por páginas aisladas.
 
 ``` text

@@ -3,7 +3,10 @@ import { createSession } from "@/features/focus-tracking/domain";
 import type { FocusInterval, FocusSession } from "@/features/focus-tracking/types";
 import { computeStats, dayKey, isValidTimeZone } from "@/features/history/stats";
 import { MemoryFocusRepository } from "@/server/repositories/memory-focus-repository";
-import { createFocusService, DomainError } from "@/server/services/focus-service";
+import { DomainError } from "@/server/errors";
+import { MemorySettingsRepository } from "@/server/repositories/memory-settings-repository";
+import { MemoryTaskRepository } from "@/server/repositories/memory-task-repository";
+import { createServices } from "@/server/services";
 
 const TZ = "America/Argentina/Buenos_Aires"; // UTC-3
 const DAY = 86_400_000;
@@ -72,19 +75,12 @@ describe("computeStats", () => {
     expect(stats.days).toHaveLength(14);
   });
 
-  it("calcula hoy, meta y total; ignora descansos", () => {
+  it("calcula el foco de hoy; ignora descansos", () => {
     const items = [focus(NOW - 1000, 1800), focus(NOW - 5000, 900)];
     const brk = focus(NOW - 9000, 300);
     brk.session.mode = "short_break";
     const stats = run([...items, brk]);
     expect(stats.today.focusSeconds).toBe(2700);
-    expect(stats.today.sessions).toBe(2);
-    expect(stats.today.goalProgress).toBeCloseTo(0.75);
-    expect(stats.totalFocusSeconds).toBe(2700);
-  });
-
-  it("la meta no pasa de 100%", () => {
-    expect(run([focus(NOW - 1000, 9999)]).today.goalProgress).toBe(1);
   });
 
   it("racha: no se rompe si hoy todavía no hubo foco", () => {
@@ -108,11 +104,6 @@ describe("computeStats", () => {
     ]);
   });
 
-  it("separa tiempo planificado de acreditado en las sesiones recientes", () => {
-    const [s] = run([focus(NOW - 1000, 400)]).recentSessions;
-    expect(s).toMatchObject({ plannedSeconds: 1500, creditedSeconds: 400 });
-  });
-
   it("valida zonas horarias", () => {
     expect(isValidTimeZone("America/Montevideo")).toBe(true);
     expect(isValidTimeZone("No/Existe")).toBe(false);
@@ -122,43 +113,43 @@ describe("computeStats", () => {
 describe("servicio: ajustes y stats", () => {
   const make = () => {
     let t = NOW;
-    return {
-      svc: createFocusService({
-        repo: new MemoryFocusRepository(),
-        now: () => t,
-        newId: () => `id-${++n}`,
-      }),
-      advance: (s: number) => (t += s * 1000),
-    };
+    const services = createServices({
+      focusRepo: new MemoryFocusRepository(),
+      taskRepo: new MemoryTaskRepository(),
+      settingsRepo: new MemorySettingsRepository(),
+      now: () => t,
+      newId: () => `id-${++n}`,
+    });
+    return { ...services, advance: (s: number) => (t += s * 1000) };
   };
 
   it("los ajustes cambian la duración de la próxima fase y la meta", async () => {
-    const { svc } = make();
-    await svc.updateSettings("u", { focusMinutes: 10, dailyGoalMinutes: 30 });
-    const { session } = await svc.start("u", {});
+    const { focus, settings, stats } = make();
+    await settings.updateSettings("u", { focusMinutes: 10, dailyGoalMinutes: 30 });
+    const { session } = await focus.start("u", {});
     expect(session!.plannedSeconds).toBe(600);
-    const stats = await svc.getStats("u", TZ);
-    expect(stats.today.goalSeconds).toBe(1800);
+    const result = await stats.getStats("u", TZ);
+    expect(result.today.goalSeconds).toBe(1800);
   });
 
   it("los ajustes son por usuario", async () => {
-    const { svc } = make();
-    await svc.updateSettings("a", { focusMinutes: 50 });
-    expect((await svc.getSettings("b")).focusMinutes).toBe(25);
+    const { settings } = make();
+    await settings.updateSettings("a", { focusMinutes: 50 });
+    expect((await settings.getSettings("b")).focusMinutes).toBe(25);
   });
 
   it("stats refleja el tiempo acreditado y la planta", async () => {
-    const { svc, advance } = make();
-    const { session } = await svc.start("u", {});
+    const { focus, stats, advance } = make();
+    const { session } = await focus.start("u", {});
     advance(20);
-    await svc.heartbeat("u", session!.id, "key-12345678");
-    const stats = await svc.getStats("u", TZ);
-    expect(stats.today.focusSeconds).toBe(20);
-    expect(stats.plantTotalSeconds).toBe(20);
+    await focus.heartbeat("u", session!.id, "key-12345678");
+    const result = await stats.getStats("u", TZ);
+    expect(result.today.focusSeconds).toBe(20);
+    expect(result.plantTotalSeconds).toBe(20);
   });
 
   it("rechaza zona horaria inválida", async () => {
-    const { svc } = make();
-    await expect(svc.getStats("u", "Nope/Nope")).rejects.toBeInstanceOf(DomainError);
+    const { stats } = make();
+    await expect(stats.getStats("u", "Nope/Nope")).rejects.toBeInstanceOf(DomainError);
   });
 });

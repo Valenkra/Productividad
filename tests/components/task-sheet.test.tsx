@@ -23,7 +23,7 @@ const onDeleted = vi.fn();
 
 beforeEach(() => {
   ctx = createTestService();
-  api = installFakeApi(ctx.service, "u", ctx.tasks);
+  api = installFakeApi(ctx);
   onClose.mockClear();
   onSaved.mockClear();
   onDeleted.mockClear();

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { nextMode, plannedSecondsFor } from "@/features/pomodoro/sequence";
+import { cycleAfter, nextMode, plannedSecondsFor } from "@/features/pomodoro/sequence";
 import {
   DEFAULT_POMODORO_SETTINGS,
   pomodoroSettingsSchema,
@@ -102,5 +102,43 @@ describe("esquemas de ajustes", () => {
     expect(updateSettingsSchema.safeParse({ dailyGoalMinutes: 90 }).success).toBe(true);
     expect(updateSettingsSchema.safeParse({}).success).toBe(true);
     expect(updateSettingsSchema.safeParse({ dailyGoalMinutes: -1 }).success).toBe(false);
+  });
+});
+
+describe("cycleAfter (qué pasa con el ciclo cuando termina una fase)", () => {
+  it("un foco completado suma 1 y habilita el descanso", () => {
+    expect(cycleAfter({ mode: "focus", status: "completed" }, 2)).toEqual({
+      cycleFocusCount: 3,
+      lastMode: "focus",
+    });
+  });
+
+  it("un descanso corto completado conserva la cuenta; el largo la reinicia", () => {
+    expect(cycleAfter({ mode: "short_break", status: "completed" }, 2)).toEqual({
+      cycleFocusCount: 2,
+      lastMode: "short_break",
+    });
+    expect(cycleAfter({ mode: "long_break", status: "completed" }, 4)).toEqual({
+      cycleFocusCount: 0,
+      lastMode: "long_break",
+    });
+  });
+
+  it("abandonar un foco no habilita descanso ni suma", () => {
+    expect(cycleAfter({ mode: "focus", status: "abandoned" }, 2)).toEqual({
+      cycleFocusCount: 2,
+      lastMode: null,
+    });
+  });
+
+  it("saltar un descanso vuelve a foco (y saltar el largo reinicia el ciclo)", () => {
+    expect(cycleAfter({ mode: "short_break", status: "abandoned" }, 2)).toEqual({
+      cycleFocusCount: 2,
+      lastMode: "short_break",
+    });
+    expect(cycleAfter({ mode: "long_break", status: "abandoned" }, 4)).toEqual({
+      cycleFocusCount: 0,
+      lastMode: "long_break",
+    });
   });
 });

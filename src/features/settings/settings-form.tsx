@@ -1,11 +1,15 @@
 "use client";
 
-import { ChevronLeft, Minus, Plus } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useApi } from "@/lib/utils/use-api";
+import { Stepper } from "@/components/ui/stepper";
+import { btnRound, card } from "@/components/ui/styles";
+import { Switch } from "@/components/ui/switch";
+import { patchSettings } from "./api";
 import type { UserSettings } from "./schema";
+import { useSettings } from "./settings-context";
 
 type NumericKey =
   | "focusMinutes"
@@ -70,19 +74,22 @@ const TOGGLES: { key: ToggleKey; label: string }[] = [
   { key: "sound", label: "Sonido al terminar" },
 ];
 
-const card = "rounded-[22px] border-2 border-ink bg-white shadow-[0_4px_0_var(--ink)]";
-const stepBtn =
-  "grid size-9 place-items-center rounded-xl border-2 border-ink bg-white transition-colors hover:bg-peach disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
-
 export function SettingsForm() {
-  const { data, error, loading } = useApi<UserSettings>("/api/settings");
+  const { settings: data, error, loading, setSettings } = useSettings();
   if (loading) return <p role="status">Cargando ajustes…</p>;
   if (error || !data)
     return <p role="alert">{error ?? "No se pudieron cargar los ajustes."}</p>;
-  return <Form initial={data} />;
+  return <Form initial={data} onSaved={setSettings} />;
 }
 
-function Form({ initial }: { initial: UserSettings }) {
+function Form({
+  initial,
+  onSaved,
+}: {
+  initial: UserSettings;
+  /** Comparte lo guardado con el resto de la app (Foco, Tareas…). */
+  onSaved: (settings: UserSettings) => void;
+}) {
   const router = useRouter();
   const [values, setValues] = useState<UserSettings>(initial);
   const [problem, setProblem] = useState<string | null>(null);
@@ -93,12 +100,7 @@ function Form({ initial }: { initial: UserSettings }) {
     setValues({ ...values, ...patch });
     setProblem(null);
     try {
-      const res = await fetch("/api/settings", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(patch),
-      });
-      if (!res.ok) throw new Error("rejected");
+      onSaved(await patchSettings(patch));
       return true;
     } catch (e) {
       setValues(previous);
@@ -114,11 +116,7 @@ function Form({ initial }: { initial: UserSettings }) {
   return (
     <section className="flex flex-col gap-5">
       <header className="flex items-center gap-3">
-        <Link
-          href="/focus"
-          aria-label="Volver"
-          className="grid size-11 place-items-center rounded-full border-2 border-ink bg-white shadow-[0_3px_0_var(--ink)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-        >
+        <Link href="/focus" aria-label="Volver" className={btnRound}>
           <ChevronLeft size={22} strokeWidth={2.2} aria-hidden="true" />
         </Link>
         <h1 className="text-[30px] font-semibold leading-none">Ajustes</h1>
@@ -135,33 +133,18 @@ function Form({ initial }: { initial: UserSettings }) {
                 role="group"
                 aria-label={s.label}
                 className={`flex items-center justify-between gap-3 px-4 py-3 ${
-                  i > 0 ? "border-t-2 border-line" : ""
+                  i > 0 ? "border-t-[1.5px] border-line" : ""
                 }`}
               >
                 <span className="font-medium">{s.label}</span>
-                <span className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    aria-label="Disminuir"
-                    className={stepBtn}
-                    disabled={value - s.step < s.min}
-                    onClick={() => void save({ [s.key]: value - s.step })}
-                  >
-                    <Minus size={16} strokeWidth={2.6} aria-hidden="true" />
-                  </button>
-                  <span className="min-w-16 text-center font-semibold tabular-nums">
-                    {s.format(value)}
-                  </span>
-                  <button
-                    type="button"
-                    aria-label="Aumentar"
-                    className={stepBtn}
-                    disabled={value + s.step > s.max}
-                    onClick={() => void save({ [s.key]: value + s.step })}
-                  >
-                    <Plus size={16} strokeWidth={2.6} aria-hidden="true" />
-                  </button>
-                </span>
+                <Stepper
+                  value={value}
+                  min={s.min}
+                  max={s.max}
+                  step={s.step}
+                  display={s.format(value)}
+                  onChange={(next) => void save({ [s.key]: next })}
+                />
               </div>
             );
           })}
@@ -177,27 +160,15 @@ function Form({ initial }: { initial: UserSettings }) {
               <div
                 key={t.key}
                 className={`flex items-center justify-between gap-3 px-4 py-3 ${
-                  i > 0 ? "border-t-2 border-line" : ""
+                  i > 0 ? "border-t-[1.5px] border-line" : ""
                 }`}
               >
                 <span className="font-medium">{t.label}</span>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={on}
-                  aria-label={t.label}
-                  onClick={() => void save({ [t.key]: !on })}
-                  className={`relative h-8 w-[54px] shrink-0 rounded-full border-2 border-ink transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
-                    on ? "bg-[#7fcf9f]" : "bg-line"
-                  }`}
-                >
-                  <span
-                    aria-hidden="true"
-                    className={`absolute top-1/2 size-6 -translate-y-1/2 rounded-full border-2 border-ink bg-white transition-[left] ${
-                      on ? "left-[24px]" : "left-[2px]"
-                    }`}
-                  />
-                </button>
+                <Switch
+                  checked={on}
+                  label={t.label}
+                  onChange={(next) => void save({ [t.key]: next })}
+                />
               </div>
             );
           })}
@@ -215,7 +186,7 @@ function Form({ initial }: { initial: UserSettings }) {
         onClick={async () => {
           if (await save({ onboardingDone: false })) router.push("/onboarding");
         }}
-        className="min-h-12 rounded-[20px] border-2 border-dashed border-[#c9b8d6] px-4 font-medium text-muted transition-colors hover:bg-lilac"
+        className="min-h-12 rounded-[20px] border-[1.5px] border-dashed border-dashed-line px-4 font-medium text-muted transition-colors hover:bg-lilac"
       >
         Ver la introducción otra vez
       </button>

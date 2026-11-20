@@ -31,7 +31,7 @@ export function applyTaskUpdate(task: Task, patch: UpdateTaskInput, now: number)
   const next: Task = { ...task, ...patch, updatedAt: now };
   if (patch.status === "done") {
     next.completedAt = task.completedAt ?? now;
-  } else if (patch.status === "todo" || patch.status === "in_progress") {
+  } else if (patch.status && isOpenTask({ status: patch.status })) {
     next.completedAt = null;
   }
   return next;
@@ -64,21 +64,9 @@ export function sortTasks(tasks: Task[], sort: TaskSort): Task[] {
   }
 }
 
-/** Próxima tarea sugerida: en curso primero, luego prioridad, fecha límite y posición. */
-export function nextTask(tasks: Task[]): Task | null {
-  const open = tasks.filter((t) => t.status === "todo" || t.status === "in_progress");
-  const rank = (t: Task) => (t.status === "in_progress" ? 0 : 1);
-  open.sort(
-    (a, b) =>
-      rank(a) - rank(b) || byPriority(a, b) || byDue(a, b) || a.position - b.position,
-  );
-  return open[0] ?? null;
-}
-
-/** Vencida: abierta, con fecha límite y ya pasada (justo en la fecha aún no cuenta). */
-export function isOverdue(task: Task, now: number): boolean {
-  const open = task.status === "todo" || task.status === "in_progress";
-  return open && task.dueAt !== null && now > task.dueAt;
+/** Abierta = pendiente o en curso (ni hecha ni archivada). */
+export function isOpenTask(task: Pick<Task, "status">): boolean {
+  return task.status === "todo" || task.status === "in_progress";
 }
 
 /** Pomodoros completados por tarea: focos terminados con éxito (no abandonados, no descansos). */

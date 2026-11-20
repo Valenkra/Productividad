@@ -8,7 +8,7 @@ let ctx: ReturnType<typeof createTestService>;
 
 beforeEach(() => {
   ctx = createTestService(); // martes 10 de marzo de 2026, 15:00 UTC
-  installFakeApi(ctx.service, "u", ctx.tasks);
+  installFakeApi(ctx);
 });
 afterEach(() => {
   cleanup();

@@ -17,7 +17,7 @@ Rediseño de la app interior de Focus Garden (repo `Valenkra/Productividad`): un
 | Etapas de la planta | `src/features/garden/growth.ts`, `plant-illustration.tsx` |
 | Jardín | `src/features/garden/garden-view.tsx` |
 | Tareas + hoja de edición | `src/features/tasks/tasks-view.tsx`, `schema.ts`, `types.ts` |
-| Estadísticas | `src/features/history/dashboard-view.tsx`, `stats.ts` |
+| Estadísticas | `src/features/history/stats-view.tsx`, `stats-view-model.ts`, `stats.ts` |
 | Ajustes | `src/features/settings/settings-form.tsx`, `src/features/pomodoro/settings.ts` |
 | Barra de pestañas | `src/components/layout/*` (barra flotante en móvil) |
 | Onboarding | nuevo: `src/features/onboarding/` |

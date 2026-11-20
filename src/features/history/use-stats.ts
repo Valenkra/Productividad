@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { browserTimeZone, useApi } from "@/lib/utils/use-api";
+import { browserTimeZone } from "@/lib/time/format";
+import { useApi } from "@/lib/utils/use-api";
 import type { Stats } from "./stats";
 
 export type StatsResponse = Stats & { plantTotalSeconds: number };

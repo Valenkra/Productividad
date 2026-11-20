@@ -12,6 +12,8 @@
 
 # testing
 /coverage
+/test-results/
+/playwright-report/
 
 # next.js
 /.next/
@@ -30,8 +32,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files (solo se commitea el ejemplo)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -39,14 +42,3 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-# env
-.env*
-!.env.example
-
-# coverage
-/coverage
-
-# playwright
-/test-results/
-/playwright-report/

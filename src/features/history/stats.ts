@@ -1,23 +1,8 @@
-import type {
-  FocusInterval,
-  FocusMode,
-  FocusSession,
-  SessionStatus,
-} from "@/features/focus-tracking/types";
+import type { FocusInterval, FocusSession } from "@/features/focus-tracking/types";
 
 export interface DayTotal {
   date: string; // YYYY-MM-DD en la zona horaria del usuario
   focusSeconds: number;
-}
-
-export interface RecentSession {
-  id: string;
-  mode: FocusMode;
-  status: SessionStatus;
-  taskId: string | null;
-  startedAt: number;
-  plannedSeconds: number;
-  creditedSeconds: number;
 }
 
 export interface Stats {
@@ -25,20 +10,14 @@ export interface Stats {
   today: {
     date: string;
     focusSeconds: number;
-    sessions: number;
     /** Focos completados que terminaron hoy. */
     pomodoros: number;
     goalSeconds: number;
-    /** 0–1 (tope 1). */
-    goalProgress: number;
   };
   days: DayTotal[];
-  weekFocusSeconds: number;
-  totalFocusSeconds: number;
   /** Días seguidos con foco. Si hoy aún no hubo, se cuenta desde ayer: descansar hoy no la rompe. */
   streakDays: number;
   perTask: { taskId: string; focusSeconds: number }[];
-  recentSessions: RecentSession[];
 }
 
 const DAY_MS = 86_400_000;
@@ -86,11 +65,9 @@ export function computeStats(input: {
 
   const byDay = new Map<string, number>();
   const byTask = new Map<string, number>();
-  let total = 0;
   for (const iv of intervals) {
     const session = focusSessions.get(iv.sessionId);
     if (!session) continue; // los descansos no cuentan como foco
-    total += iv.creditedSeconds;
     const key = dayKey(iv.startedAt, timeZone);
     byDay.set(key, (byDay.get(key) ?? 0) + iv.creditedSeconds);
     if (session.taskId) {
@@ -102,10 +79,6 @@ export function computeStats(input: {
   const days = keys.map((date) => ({ date, focusSeconds: byDay.get(date) ?? 0 }));
   const todayKey = keys[keys.length - 1];
   const todaySeconds = byDay.get(todayKey) ?? 0;
-  const todaySessions = [...focusSessions.values()].filter(
-    (s) => s.creditedSeconds > 0 && dayKey(s.startedAt, timeZone) === todayKey,
-  ).length;
-
   const todayPomodoros = sessions.filter(
     (s) =>
       s.mode === "focus" &&
@@ -126,31 +99,13 @@ export function computeStats(input: {
     today: {
       date: todayKey,
       focusSeconds: todaySeconds,
-      sessions: todaySessions,
       pomodoros: todayPomodoros,
       goalSeconds: dailyGoalSeconds,
-      goalProgress:
-        dailyGoalSeconds > 0 ? Math.min(1, todaySeconds / dailyGoalSeconds) : 0,
     },
     days,
-    weekFocusSeconds: days.slice(-7).reduce((a, d) => a + d.focusSeconds, 0),
-    totalFocusSeconds: total,
     streakDays: streak,
     perTask: [...byTask]
       .map(([taskId, focusSeconds]) => ({ taskId, focusSeconds }))
       .sort((a, b) => b.focusSeconds - a.focusSeconds),
-    recentSessions: sessions
-      .filter((s) => s.status === "completed" || s.status === "abandoned")
-      .sort((a, b) => b.startedAt - a.startedAt)
-      .slice(0, 20)
-      .map((s) => ({
-        id: s.id,
-        mode: s.mode,
-        status: s.status,
-        taskId: s.taskId,
-        startedAt: s.startedAt,
-        plannedSeconds: s.plannedSeconds,
-        creditedSeconds: s.creditedSeconds,
-      })),
   };
 }

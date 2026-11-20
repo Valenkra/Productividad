@@ -4,8 +4,6 @@ import manifest from "@/app/manifest";
 import { PWA } from "@/lib/pwa/config";
 
 const css = readFileSync("src/app/globals.css", "utf8");
-const cssVar = (name: string) =>
-  new RegExp(`--${name}:\\s*(#[0-9a-fA-F]{6})`).exec(css)?.[1];
 
 describe("manifest", () => {
   const m = manifest();
@@ -25,9 +23,14 @@ describe("manifest", () => {
     expect(m.id).toBeTruthy();
   });
 
-  it("los colores salen de la paleta de la app (no valores sueltos)", () => {
-    expect(m.background_color?.toLowerCase()).toBe(cssVar("background")!.toLowerCase());
-    expect(m.theme_color?.toLowerCase()).toBe(cssVar("leaf-strong")!.toLowerCase());
+  it("los colores salen de la paleta de la app interior (no valores sueltos)", () => {
+    // La PWA abre en /focus: barra y splash usan el fondo de la paleta Suave, no el verde
+    // de la landing.
+    const appTheme = /\.app-theme\s*\{([^}]*)\}/.exec(css)?.[1] ?? "";
+    const appBackground = /--background:\s*(#[0-9a-fA-F]{6})/.exec(appTheme)?.[1];
+    expect(appBackground).toBeTruthy();
+    expect(m.background_color?.toLowerCase()).toBe(appBackground!.toLowerCase());
+    expect(m.theme_color?.toLowerCase()).toBe(appBackground!.toLowerCase());
   });
 
   it("incluye íconos 192 y 512 (any) y 512 maskable, todos PNG bajo /icons/", () => {

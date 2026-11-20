@@ -2,6 +2,11 @@
 
 Fecha: 2026-11-20 · Commit evaluado: `36b7705` (árbol limpio)
 
+> **Estado:** las sugerencias de este informe ya están implementadas (sin commitear). El detalle,
+> los desvíos y lo que quedó pendiente están en `docs/NEXT-STEPS.md` §1–2. Este documento
+> describe el estado **anterior** a esos cambios; los diagramas de flujo de §2 siguen valiendo,
+> con `settings`/`stats`/`garden` como servicios propios y `createServices()` en el container.
+
 Estado de partida comprobado: `npm run lint`, `npm run typecheck` y `npm test` sin errores
 (41 archivos, **444 tests en verde**). No se corrió `build` ni e2e para este informe.
 

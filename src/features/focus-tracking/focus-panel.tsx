@@ -5,41 +5,25 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { btnPrimary, btnRound, btnSecondary, focusRing } from "@/components/ui/styles";
-import { nextStageIn, sessionStage, STAGE_NAMES } from "@/features/garden/growth";
+import { STAGE_NAMES } from "@/features/garden/growth";
 import { PlantIllustration } from "@/features/garden/plant-illustration";
-import type { UserSettings } from "@/features/settings/schema";
-import { subjectOf } from "@/features/tasks/subjects";
+import { useSettings } from "@/features/settings/settings-context";
+import { isOpenTask } from "@/features/tasks/domain";
 import { TaskPicker } from "@/features/tasks/task-picker";
+import { TaskSummary } from "@/features/tasks/task-summary";
 import type { TaskWithProgress } from "@/features/tasks/types";
+import { formatClock } from "@/lib/time/format";
 import { playChime } from "@/lib/utils/chime";
 import { useApi } from "@/lib/utils/use-api";
-import type { FocusMode } from "./types";
+import { focusViewModel } from "./focus-view-model";
+import { GiveUpDialog } from "./give-up-dialog";
+import { StagePath } from "./stage-path";
 import { useFocusSession } from "./use-focus-session";
-
-const MODE_LABEL: Record<FocusMode, string> = {
-  focus: "Concentración",
-  short_break: "Descanso corto",
-  long_break: "Descanso largo",
-};
-
-const BREAK_TIP: Record<Exclude<FocusMode, "focus">, string> = {
-  short_break: "Levántate, estira la espalda y bebe agua.",
-  long_break: "Descanso largo: sal a caminar o come algo rico.",
-};
-
-function mmss(total: number) {
-  const m = Math.floor(total / 60);
-  const s = total % 60;
-  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-}
-
-const isOpenTask = (t: TaskWithProgress) =>
-  t.status === "todo" || t.status === "in_progress";
 
 export function FocusPanel() {
   const f = useFocusSession();
   const search = useSearchParams();
-  const settings = useApi<UserSettings>("/api/settings").data;
+  const { settings } = useSettings();
   // Se recarga cuando cambia el ciclo (un foco completado suma pomodoros a su tarea).
   const tasksApi = useApi<{ tasks: TaskWithProgress[] }>(
     "/api/tasks?sort=priority",
@@ -76,56 +60,18 @@ export function FocusPanel() {
   if (!f.state) return <p role="alert">{f.error ?? "No se pudo cargar el estado."}</p>;
 
   const open = f.open && session ? session : null;
-  const mode: FocusMode = open ? open.mode : f.state.nextMode;
-  const isBreak = mode !== "focus";
-  const planned = open ? open.plannedSeconds : f.state.nextPlannedSeconds;
-  const elapsed = open ? f.displayedSeconds : 0;
-  const remaining = open ? f.remainingSeconds : planned;
-  const stage = isBreak ? STAGE_NAMES.length - 1 : sessionStage(elapsed, planned, false);
-  const running = open?.status === "active";
-  const paused = open?.status === "paused";
-
-  const cycleSize = settings?.longBreakInterval ?? 4;
-  const done = f.state.cycleFocusCount;
-  const cycleNow = Math.max(1, Math.min(cycleSize, isBreak ? done : done + 1));
-
-  const name = settings?.displayName.trim() ?? "";
-  const greeting = isBreak
-    ? "¡Floreció! Bien hecho"
-    : running
-      ? "Concentración a tope"
-      : name
-        ? `¡A por ello, ${name}!`
-        : "¡A por ello!";
-
-  let hint: string;
-  if (isBreak) {
-    hint = paused
-      ? "En pausa"
-      : running
-        ? "Disfruta del descanso"
-        : "Pulsa empezar para descansar";
-  } else if (!open) {
-    hint = "Pulsa empezar para plantar tu semilla";
-  } else if (paused) {
-    hint = "En pausa — tu planta te espera";
-  } else {
-    const wait = nextStageIn(elapsed, planned);
-    hint =
-      wait === null
-        ? "Florece al terminar"
-        : `${STAGE_NAMES[stage + 1]} en ${mmss(wait)}`;
-  }
-
-  const stateText = !open
-    ? "Sin sesión"
-    : paused
-      ? "Pausada: no se está contando tiempo"
-      : f.counting
-        ? "Contando tiempo"
-        : !f.online
-          ? "Sin conexión: no se cuenta tiempo"
-          : "Esperando que vuelvas a la app";
+  const vm = focusViewModel({
+    open,
+    nextMode: f.state.nextMode,
+    nextPlannedSeconds: f.state.nextPlannedSeconds,
+    cycleFocusCount: f.state.cycleFocusCount,
+    displayedSeconds: f.displayedSeconds,
+    remainingSeconds: f.remainingSeconds,
+    counting: f.counting,
+    online: f.online,
+    settings,
+  });
+  const { isBreak, stage, running } = vm;
 
   const sessionTask = open?.taskId
     ? allTasks.find((t) => t.id === open.taskId)
@@ -150,15 +96,15 @@ export function FocusPanel() {
 
       <header className="flex items-end justify-between gap-3">
         <div className="min-w-0">
-          <p className="truncate text-sm font-medium text-muted">{greeting}</p>
-          <h1 className="text-[26px] font-semibold leading-tight">{MODE_LABEL[mode]}</h1>
+          <p className="truncate text-sm font-medium text-muted">{vm.greeting}</p>
+          <h1 className="text-[26px] font-semibold leading-tight">{vm.title}</h1>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <span
-            aria-label={`Pomodoro ${cycleNow} de ${cycleSize}`}
+            aria-label={`Pomodoro ${vm.cycleNow} de ${vm.cycleSize}`}
             className="rounded-full border-[1.5px] border-ink bg-white px-3 py-1 text-sm font-semibold shadow-[0_3px_0_var(--ink)]"
           >
-            {`${cycleNow}/${cycleSize}`}
+            {`${vm.cycleNow}/${vm.cycleSize}`}
           </span>
           <Link href="/settings" aria-label="Ajustes" className={btnRound}>
             <Settings size={22} strokeWidth={2.2} aria-hidden="true" />
@@ -187,7 +133,7 @@ export function FocusPanel() {
 
       <div
         className={`relative grid h-[260px] place-items-center overflow-hidden rounded-[36px] border-[1.5px] border-ink shadow-[0_4px_0_var(--ink)] transition-colors duration-[400ms] ${
-          isBreak ? "bg-[#e3dcf3]" : "bg-mint"
+          isBreak ? "bg-rest-card" : "bg-mint"
         }`}
       >
         <span
@@ -206,9 +152,9 @@ export function FocusPanel() {
         </div>
       </div>
 
-      {isBreak ? (
+      {vm.breakTip ? (
         <p className="rounded-[18px] bg-white px-4 py-3 text-center text-[15px] font-medium">
-          {BREAK_TIP[mode]}
+          {vm.breakTip}
         </p>
       ) : (
         <StagePath stage={stage} />
@@ -217,16 +163,16 @@ export function FocusPanel() {
       <div className="text-center">
         <p
           role="timer"
-          aria-label={`Quedan ${mmss(remaining)}`}
+          aria-label={`Quedan ${formatClock(vm.remaining)}`}
           className="text-[84px] font-semibold leading-none tabular-nums sm:text-[92px]"
         >
-          {mmss(remaining)}
+          {formatClock(vm.remaining)}
         </p>
         <p aria-live="polite" className="mt-1 text-[15px] text-muted">
-          {hint}
+          {vm.hint}
         </p>
         <p role="status" aria-label="Estado de la sesión" className="sr-only">
-          {stateText}
+          {vm.stateText}
         </p>
       </div>
 
@@ -239,7 +185,7 @@ export function FocusPanel() {
           <button
             type="button"
             onClick={() => setPickerNow(Date.now())}
-            className={`flex items-center gap-3 rounded-[20px] bg-lilac px-3.5 py-2.5 text-left transition-colors hover:bg-[#e3dcf3] ${focusRing}`}
+            className={`flex items-center gap-3 rounded-[20px] bg-lilac px-3.5 py-2.5 text-left transition-colors hover:bg-rest-card ${focusRing}`}
           >
             <TaskSummary task={shownTask} />
             <span className="text-sm text-muted">cambiar</span>
@@ -292,41 +238,17 @@ export function FocusPanel() {
       </p>
 
       {givingUp && open && !isBreak && (
-        <div className="fixed inset-0 z-40 grid place-items-center bg-[rgba(74,61,85,0.45)] px-5">
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="give-up-title"
-            className="w-full max-w-sm rounded-[30px] border-[1.5px] border-ink bg-white p-6 text-center shadow-[0_4px_0_var(--ink)]"
-          >
-            <h2 id="give-up-title" className="text-2xl font-semibold">
-              ¿Rendirte ahora?
-            </h2>
-            <p className="mt-2 text-muted">
-              {`Tu ${STAGE_NAMES[stage].toLowerCase()} no llegará a florecer y no irá al jardín. Lo que estudiaste sigue contando para ti.`}
-            </p>
-            <button
-              type="button"
-              className={`${btnPrimary} mt-5 w-full`}
-              onClick={() => {
-                setGivingUp(false);
-                void f.resume();
-              }}
-            >
-              Seguir estudiando
-            </button>
-            <button
-              type="button"
-              className={`mt-3 min-h-11 w-full rounded-full font-semibold text-muted hover:text-foreground ${focusRing}`}
-              onClick={() => {
-                setGivingUp(false);
-                void f.finish("abandoned");
-              }}
-            >
-              Sí, terminar
-            </button>
-          </div>
-        </div>
+        <GiveUpDialog
+          stageName={STAGE_NAMES[stage]}
+          onKeepGoing={() => {
+            setGivingUp(false);
+            void f.resume();
+          }}
+          onGiveUp={() => {
+            setGivingUp(false);
+            void f.finish("abandoned");
+          }}
+        />
       )}
 
       {pickerNow !== null && (
@@ -346,85 +268,5 @@ export function FocusPanel() {
         />
       )}
     </section>
-  );
-}
-
-function TaskSummary({ task }: { task: TaskWithProgress | undefined }) {
-  if (!task) {
-    return (
-      <span className="flex min-w-0 flex-1 items-center gap-3">
-        <span
-          aria-hidden="true"
-          className="size-3.5 shrink-0 rounded-full border-[1.5px] border-dashed border-ink"
-        />
-        <span className="truncate font-medium">Sesión libre, sin tarea</span>
-      </span>
-    );
-  }
-  const subject = subjectOf(task.subject);
-  return (
-    <span className="flex min-w-0 flex-1 items-center gap-3">
-      <span
-        aria-hidden="true"
-        className={`size-3.5 shrink-0 rounded-full border-[1.5px] border-ink ${subject?.bg ?? "bg-white"}`}
-      />
-      <span className="min-w-0">
-        <span className="block truncate text-base font-medium">{task.title}</span>
-        <span className="block text-[13px] text-muted">
-          {[
-            subject?.name,
-            `${task.completedPomodoros} de ${task.estimatedPomodoros} pomodoros`,
-          ]
-            .filter(Boolean)
-            .join(" · ")}
-        </span>
-      </span>
-    </span>
-  );
-}
-
-/** Camino de 6 etapas: completadas en acento, la actual destacada, el resto en `line`. */
-function StagePath({ stage }: { stage: number }) {
-  const last = STAGE_NAMES.length - 1;
-  return (
-    <ol
-      aria-label="Etapas de la planta"
-      className="relative mt-2 flex items-center justify-between px-1"
-    >
-      <span
-        aria-hidden="true"
-        className="absolute inset-x-3 top-1/2 h-1 -translate-y-1/2 rounded-full bg-line"
-      />
-      <span
-        aria-hidden="true"
-        className="absolute left-3 top-1/2 h-1 -translate-y-1/2 rounded-full bg-accent transition-[width] duration-500"
-        style={{ width: `calc((100% - 1.5rem) * ${stage / last})` }}
-      />
-      {STAGE_NAMES.map((name, i) => {
-        const state = i < stage ? "completada" : i === stage ? "actual" : "pendiente";
-        return (
-          <li
-            key={name}
-            aria-label={`${name} (${state})`}
-            aria-current={i === stage ? "step" : undefined}
-            className="relative grid size-[30px] place-items-center"
-          >
-            {state === "actual" ? (
-              <span className="grid size-[30px] place-items-center rounded-full border-[3px] border-accent bg-white">
-                <span className="size-3 rounded-full bg-accent" />
-              </span>
-            ) : (
-              <span
-                className={`size-[22px] rounded-full ${
-                  state === "completada"
-                    ? "border-[1.5px] border-ink bg-accent"
-                    : "bg-line"
-                }`}
-              />
-            )}
-          </li>
-        );
-      })}
-    </ol>
   );
 }

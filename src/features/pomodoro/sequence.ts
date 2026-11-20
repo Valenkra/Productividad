@@ -1,4 +1,4 @@
-import type { FocusMode } from "@/features/focus-tracking/types";
+import type { FocusMode, FocusSession } from "@/features/focus-tracking/types";
 import type { PomodoroSettings } from "./settings";
 
 /**
@@ -22,4 +22,25 @@ export function plannedSecondsFor(mode: FocusMode, s: PomodoroSettings): number 
         ? s.shortBreakMinutes
         : s.longBreakMinutes;
   return minutes * 60;
+}
+
+export interface CycleProgress {
+  cycleFocusCount: number;
+  lastMode: FocusMode | null;
+}
+
+/** Cómo queda el ciclo Pomodoro cuando una fase termina (completada o abandonada). */
+export function cycleAfter(
+  session: Pick<FocusSession, "mode" | "status">,
+  cycleFocusCount: number,
+): CycleProgress {
+  const resetsCycle = session.mode === "long_break";
+  if (session.status === "completed" && session.mode === "focus") {
+    return { cycleFocusCount: cycleFocusCount + 1, lastMode: "focus" };
+  }
+  // Descanso (completado o saltado): sigue el foco. Abandonar un foco no habilita descanso.
+  return {
+    cycleFocusCount: resetsCycle ? 0 : cycleFocusCount,
+    lastMode: session.mode === "focus" ? null : session.mode,
+  };
 }

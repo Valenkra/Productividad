@@ -1,23 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import type { FocusState, HeartbeatResponse } from "@/server/services/focus-service";
 import { getAttention, subscribeAttention } from "@/lib/utils/browser-signals";
 import { useOnline } from "@/lib/utils/use-online";
+import { focusApi } from "./api";
 import { HEARTBEAT_INTERVAL_SECONDS, MAX_CREDIT_SECONDS } from "./config";
-
-const BASE = "/api/focus-sessions";
-
-async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(path, {
-    ...init,
-    headers: { "Content-Type": "application/json" },
-    cache: "no-store",
-  });
-  const body = await res.json().catch(() => null);
-  if (!res.ok) throw new Error(body?.error?.message ?? `Error ${res.status}`);
-  return body as T;
-}
+import type { FocusState, HeartbeatResponse } from "./types";
 
 export function useFocusSession() {
   const [state, setState] = useState<FocusState | null>(null);
@@ -47,7 +35,8 @@ export function useFocusSession() {
   // Carga inicial: el estado real del servidor manda, nunca el reloj local.
   useEffect(() => {
     let cancelled = false;
-    api<FocusState>(`${BASE}/active`)
+    focusApi
+      .active()
       .then((s) => !cancelled && apply(s))
       .catch((e: Error) => !cancelled && setError(e.message))
       .finally(() => !cancelled && setLoading(false));
@@ -70,10 +59,7 @@ export function useFocusSession() {
     inFlight.current = true;
     const key = (pendingKey.current ??= crypto.randomUUID());
     try {
-      const res = await api<HeartbeatResponse>(`${BASE}/${sessionId}/heartbeat`, {
-        method: "POST",
-        body: JSON.stringify({ idempotencyKey: key }),
-      });
+      const res: HeartbeatResponse = await focusApi.heartbeat(sessionId, key);
       pendingKey.current = null; // confirmado: la próxima vez, clave nueva
       apply(res);
       setError(null);
@@ -97,14 +83,9 @@ export function useFocusSession() {
   }, [counting, sendHeartbeat]);
 
   const run = useCallback(
-    async (path: string, body?: unknown) => {
+    async (call: () => Promise<FocusState>) => {
       try {
-        apply(
-          await api<FocusState>(path, {
-            method: "POST",
-            body: body ? JSON.stringify(body) : undefined,
-          }),
-        );
+        apply(await call());
         setError(null);
         setNotice(null);
       } catch (e) {
@@ -120,7 +101,7 @@ export function useFocusSession() {
     if (!sessionId || status !== "active") return;
     const onChange = () => {
       if (getAttention()) return;
-      void run(`${BASE}/${sessionId}/pause`).then(() =>
+      void run(() => focusApi.pause(sessionId)).then(() =>
         setNotice("Pausamos la sesión porque saliste de la app. Volvé y reanudá."),
       );
     };
@@ -135,7 +116,7 @@ export function useFocusSession() {
   // pagehide: sendBeacon es lo único fiable al cerrar/ocultar en móviles.
   useEffect(() => {
     if (!sessionId || status !== "active") return;
-    const onHide = () => navigator.sendBeacon(`${BASE}/${sessionId}/pause`);
+    const onHide = () => focusApi.pauseBeacon(sessionId);
     window.addEventListener("pagehide", onHide);
     return () => window.removeEventListener("pagehide", onHide);
   }, [sessionId, status]);
@@ -157,10 +138,10 @@ export function useFocusSession() {
     online,
     displayedSeconds,
     remainingSeconds: Math.max(0, planned - displayedSeconds),
-    start: (taskId?: string | null) => run(BASE, taskId ? { taskId } : {}),
-    pause: () => sessionId && run(`${BASE}/${sessionId}/pause`),
-    resume: () => sessionId && run(`${BASE}/${sessionId}/resume`),
+    start: (taskId?: string | null) => run(() => focusApi.start(taskId ?? null)),
+    pause: () => sessionId && run(() => focusApi.pause(sessionId)),
+    resume: () => sessionId && run(() => focusApi.resume(sessionId)),
     finish: (outcome: "completed" | "abandoned") =>
-      sessionId && run(`${BASE}/${sessionId}/complete`, { outcome }),
+      sessionId && run(() => focusApi.finish(sessionId, outcome)),
   };
 }

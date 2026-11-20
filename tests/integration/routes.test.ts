@@ -7,7 +7,12 @@ vi.mock("next/server", async (importOriginal) => ({
 }));
 
 let ctx: ReturnType<typeof createTestService>;
-vi.mock("@/server/container", () => ({ getFocusService: () => ctx.service }));
+vi.mock("@/server/container", () => ({
+  getFocusService: () => ctx.service,
+  getSettingsService: () => ctx.settings,
+  getStatsService: () => ctx.stats,
+  getGardenService: () => ctx.garden,
+}));
 
 const sessions = await import("@/app/api/focus-sessions/route");
 const active = await import("@/app/api/focus-sessions/active/route");

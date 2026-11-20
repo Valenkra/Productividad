@@ -18,7 +18,7 @@ Este entorno no tiene Android ni iOS. Antes de dar la PWA por validada, recorré
 
 ### Android (Chrome)
 - [ ] Instalar desde el menú ⋮ → «Instalar app»; el ícono (maskable) no se ve recortado.
-- [ ] Abre en modo standalone, con la barra de color `#3a5f37`.
+- [ ] Abre en modo standalone, con la barra de color `#fbf5ee` (fondo de la paleta Suave).
 - [ ] Iniciar un foco, bloquear la pantalla ≥ 1 min, desbloquear: la sesión debe quedar **pausada** y no haber acreditado el tiempo bloqueado.
 - [ ] Modo avión: se ve el banner «Sin conexión» y, al recargar, `offline.html`.
 

@@ -36,3 +36,20 @@ export interface HeartbeatOutcome {
   interval: FocusInterval | null;
   creditedSeconds: number;
 }
+
+/** Estado que el servidor devuelve en cada operación de sesión (contrato cliente/servidor). */
+export interface FocusState {
+  session: FocusSession | null;
+  plantTotalSeconds: number;
+  nextMode: FocusMode;
+  nextPlannedSeconds: number;
+  /** Focos completados desde el último descanso largo. */
+  cycleFocusCount: number;
+  /** Hora del servidor, para que el cliente calcule su desfase. */
+  serverNow: number;
+}
+
+export interface HeartbeatResponse extends FocusState {
+  result: HeartbeatStatus | "duplicate";
+  creditedSeconds: number;
+}

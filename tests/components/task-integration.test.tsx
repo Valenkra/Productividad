@@ -19,7 +19,7 @@ const seed = (title: string, over: Record<string, unknown> = {}) =>
 
 beforeEach(() => {
   ctx = createTestService();
-  api = installFakeApi(ctx.service, "u", ctx.tasks);
+  api = installFakeApi(ctx);
   vi.spyOn(document, "hasFocus").mockReturnValue(true);
   Object.defineProperty(navigator, "sendBeacon", {
     value: () => true,

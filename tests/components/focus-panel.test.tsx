@@ -35,9 +35,9 @@ beforeEach(async () => {
   search = new URLSearchParams();
   chime.mockClear();
   ctx = createTestService();
-  api = installFakeApi(ctx.service, "u", ctx.tasks);
+  api = installFakeApi(ctx);
   // Por defecto sin descanso automático: cada test que lo necesite lo activa.
-  await ctx.service.updateSettings("u", { autoStartBreak: false });
+  await ctx.settings.updateSettings("u", { autoStartBreak: false });
   vi.spyOn(document, "hasFocus").mockReturnValue(true);
   Object.defineProperty(navigator, "sendBeacon", {
     value: () => true,
@@ -79,7 +79,7 @@ const click = (name: string | RegExp) =>
 
 describe("Foco en reposo", () => {
   it("muestra cabecera, planta en semilla, tiempo y pista para empezar", async () => {
-    await ctx.service.updateSettings("u", { displayName: "Vale" });
+    await ctx.settings.updateSettings("u", { displayName: "Vale" });
     render(<FocusPanel />);
     expect(await screen.findByRole("heading", { name: "Concentración" })).toBeTruthy();
     expect(screen.getByText("¡A por ello, Vale!")).toBeTruthy();
@@ -245,7 +245,7 @@ describe("Descanso", () => {
   });
 
   it("el descanso largo tiene su consejo", async () => {
-    await ctx.service.updateSettings("u", { longBreakInterval: 2 });
+    await ctx.settings.updateSettings("u", { longBreakInterval: 2 });
     await completeFocus();
     const s2 = await startOnServer({ mode: "focus" });
     await credit(s2.id, 1500);
@@ -311,7 +311,7 @@ describe("Al terminar el foco en pantalla", () => {
   });
 
   it("con descanso automático, el descanso arranca solo y suena", async () => {
-    await ctx.service.updateSettings("u", { autoStartBreak: true, sound: true });
+    await ctx.settings.updateSettings("u", { autoStartBreak: true, sound: true });
     await finishWhileWatching();
     expect(screen.getByRole("heading", { name: "Descanso corto" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Pausar" })).toBeTruthy();
@@ -321,7 +321,7 @@ describe("Al terminar el foco en pantalla", () => {
   });
 
   it("sin descanso automático ni sonido, espera a que el usuario empiece", async () => {
-    await ctx.service.updateSettings("u", { autoStartBreak: false, sound: false });
+    await ctx.settings.updateSettings("u", { autoStartBreak: false, sound: false });
     await finishWhileWatching();
     expect(screen.getByRole("heading", { name: "Descanso corto" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Empezar" })).toBeTruthy();

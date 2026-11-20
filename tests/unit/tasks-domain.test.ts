@@ -3,7 +3,6 @@ import {
   applyTaskUpdate,
   createTask,
   filterTasks,
-  nextTask,
   sortTasks,
 } from "@/features/tasks/domain";
 import {
@@ -289,35 +288,5 @@ describe("sortTasks", () => {
     const list = [make({ id: "b", position: 2 }), make({ id: "a", position: 1 })];
     sortTasks(list, "manual");
     expect(ids(list)).toEqual(["b", "a"]);
-  });
-});
-
-describe("nextTask", () => {
-  it("null si no hay pendientes (hechas y archivadas no cuentan)", () => {
-    expect(nextTask([])).toBeNull();
-    expect(nextTask([make({ status: "done" }), make({ status: "archived" })])).toBeNull();
-  });
-
-  it("prioriza la que está en curso", () => {
-    const list = [
-      make({ id: "alta", priority: "high" }),
-      make({ id: "curso", status: "in_progress", priority: "low" }),
-    ];
-    expect(nextTask(list)?.id).toBe("curso");
-  });
-
-  it("luego prioridad alta, luego fecha más próxima, luego posición", () => {
-    expect(
-      nextTask([
-        make({ id: "m", priority: "medium" }),
-        make({ id: "a", priority: "high" }),
-      ])?.id,
-    ).toBe("a");
-    expect(
-      nextTask([make({ id: "tarde", dueAt: 20 }), make({ id: "pronto", dueAt: 10 })])?.id,
-    ).toBe("pronto");
-    expect(
-      nextTask([make({ id: "2", position: 2 }), make({ id: "1", position: 1 })])?.id,
-    ).toBe("1");
   });
 });

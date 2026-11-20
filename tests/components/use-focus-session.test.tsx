@@ -49,7 +49,7 @@ beforeEach(() => {
   focused = true;
   online = true;
   ctx = createTestService();
-  api = installFakeApi(ctx.service);
+  api = installFakeApi(ctx);
   beacon = vi.fn(() => true);
   Object.defineProperty(navigator, "sendBeacon", { value: beacon, configurable: true });
   Object.defineProperty(document, "visibilityState", {

@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { LOCAL_USER_ID, requireUserId } from "@/server/auth";
-import { getFocusService, getTaskService } from "@/server/container";
+import {
+  getFocusService,
+  getGardenService,
+  getSettingsService,
+  getStatsService,
+  getTaskService,
+} from "@/server/container";
 
 describe("container", () => {
   it("es un singleton: el estado persiste entre llamadas", async () => {
@@ -44,5 +50,19 @@ describe("container: tareas y sesiones comparten el mismo almacén", () => {
     await expect(
       getFocusService().start("intruso", { taskId: task.id }),
     ).rejects.toMatchObject({ code: "task_not_found" });
+  });
+});
+
+describe("container: ajustes, stats y jardín comparten el almacén con el foco", () => {
+  it("los ajustes guardados cambian la próxima sesión y la meta de stats", async () => {
+    await getSettingsService().updateSettings("wiring-settings", {
+      focusMinutes: 10,
+      dailyGoalMinutes: 30,
+    });
+    const { session } = await getFocusService().start("wiring-settings", {});
+    expect(session?.plannedSeconds).toBe(600);
+    const stats = await getStatsService().getStats("wiring-settings", "UTC");
+    expect(stats.today.goalSeconds).toBe(1800);
+    expect((await getGardenService().getGarden("wiring-settings")).plants).toEqual([]);
   });
 });

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
-import { DomainError } from "@/server/services/focus-service";
+import { DomainError } from "@/server/errors";
 
 // `connection()` solo existe dentro de una petición de Next; aquí se neutraliza.
 vi.mock("next/server", async (importOriginal) => ({

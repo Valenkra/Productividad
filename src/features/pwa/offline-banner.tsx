@@ -8,7 +8,7 @@ export function OfflineBanner() {
   return (
     <div
       role="status"
-      className="sticky top-0 z-20 bg-leaf-strong px-4 py-2 text-center text-sm text-white"
+      className="sticky top-0 z-20 bg-ink px-4 py-2 text-center text-sm text-white"
     >
       Sin conexión: no se acredita tiempo de foco hasta que vuelvas a conectarte.
     </div>

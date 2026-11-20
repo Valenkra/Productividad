@@ -1,6 +1,6 @@
 /**
  * Única fuente de la identidad de la PWA. Los colores replican la paleta de
- * `src/app/globals.css` (hay un test que lo verifica).
+ * `src/app/globals.css` (fondo de la app interior; hay un test que lo verifica).
  */
 export const PWA = {
   name: "Focus Garden",
@@ -9,7 +9,7 @@ export const PWA = {
   lang: "es",
   startUrl: "/focus",
   scope: "/",
-  themeColor: "#3a5f37", // --leaf-strong
-  backgroundColor: "#faf6ec", // --background
+  themeColor: "#fbf5ee", // .app-theme --background (paleta Suave)
+  backgroundColor: "#fbf5ee", // .app-theme --background
   appleTouchIcon: "/icons/apple-touch-icon.png",
 } as const;

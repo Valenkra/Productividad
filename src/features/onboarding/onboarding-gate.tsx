@@ -2,18 +2,22 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import type { UserSettings } from "@/features/settings/schema";
-import { useApi } from "@/lib/utils/use-api";
+import { useSettings } from "@/features/settings/settings-context";
 
-/** Lleva a /onboarding a quien todavía no vio la introducción. Si los ajustes fallan, no estorba. */
+/**
+ * Lleva a /onboarding a quien todavía no vio la introducción. No muestra la app hasta
+ * saberlo (evita que Foco parpadee antes de redirigir). Si los ajustes fallan, no estorba.
+ */
 export function OnboardingGate({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { data } = useApi<UserSettings>("/api/settings");
-  const pending = data !== null && !data.onboardingDone;
+  const { settings, loading } = useSettings();
+  const pending = settings !== null && !settings.onboardingDone;
 
   useEffect(() => {
     if (pending) router.replace("/onboarding");
   }, [pending, router]);
 
+  if (loading) return <p role="status">Cargando…</p>;
+  if (pending) return null;
   return <>{children}</>;
 }

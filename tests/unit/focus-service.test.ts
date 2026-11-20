@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { MAX_CREDIT_SECONDS } from "@/features/focus-tracking/config";
 import { MemoryFocusRepository } from "@/server/repositories/memory-focus-repository";
-import { createFocusService, DomainError } from "@/server/services/focus-service";
+import { DomainError } from "@/server/errors";
+import { createFocusService } from "@/server/services/focus-service";
 
 const U = "user-a";
 let t: number;

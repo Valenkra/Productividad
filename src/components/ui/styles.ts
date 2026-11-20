@@ -23,10 +23,10 @@ export const btnRound = `grid size-11 shrink-0 place-items-center rounded-full b
 
 /** Chip seleccionable de 38 px. */
 export const chip = `inline-flex min-h-[38px] items-center rounded-full border-[1.5px] px-4 text-sm font-semibold transition-colors ${focusRing}`;
-export const chipOff = "border-[#ead6c8] bg-white";
+export const chipOff = "border-chip-line bg-white";
 export const chipOn = "border-ink";
 
 /** Campo de texto (58 px de alto). */
-export const field = `min-h-[58px] w-full rounded-[18px] border-[1.5px] border-ink bg-white px-4 text-base placeholder:text-[#b3a2bf] focus:outline-none focus:shadow-[0_0_0_4px_#ffd3c4] ${""}`;
+export const field = `min-h-[58px] w-full rounded-[18px] border-[1.5px] border-ink bg-white px-4 text-base placeholder:text-[#b3a2bf] focus:outline-none focus:shadow-[0_0_0_4px_#ffd3c4]`;
 
 export { focusRing };
