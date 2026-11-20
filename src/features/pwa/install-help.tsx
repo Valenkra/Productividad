@@ -44,8 +44,8 @@ export function InstallHelp() {
       </ol>
       {platform === "ios" && (
         <p className="mt-3 text-sm text-muted">
-          En iPhone la app debe permanecer abierta en primer plano para acreditar tiempo: no
-          cuenta con la pantalla bloqueada.
+          En iPhone la app debe permanecer abierta en primer plano para acreditar tiempo:
+          no cuenta con la pantalla bloqueada.
         </p>
       )}
     </section>

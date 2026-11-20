@@ -25,19 +25,26 @@ export function DashboardView() {
   return (
     <section className="mx-auto flex max-w-md flex-col items-center gap-5 text-center">
       <h1 className="sr-only">Inicio</h1>
-      <PlantIllustration key={growth.stage} stage={growth.stage} />
-      <p className="text-lg font-medium">{growth.name}</p>
+      <div className="relative grid h-72 w-72 place-items-center">
+        <div className="ground-glow absolute inset-0 rounded-full" aria-hidden="true" />
+        <div className="relative h-[90%] w-[90%] [&_svg]:h-full [&_svg]:w-full">
+          <PlantIllustration key={growth.stage} stage={growth.stage} fit />
+        </div>
+      </div>
+      <p className="font-display text-2xl font-semibold">{growth.name}</p>
 
       <Link
         href="/focus"
-        className="flex min-h-12 w-full items-center justify-center rounded-xl bg-leaf-strong px-5 text-base font-medium text-white"
+        className="flex min-h-12 w-full items-center justify-center rounded-full bg-leaf-strong px-6 text-base font-medium text-white shadow-[0_12px_30px_-12px_rgba(58,95,55,0.8)] transition-colors hover:bg-leaf"
       >
         Empezar a estudiar
       </Link>
 
-      <div className="w-full rounded-xl border border-border bg-surface p-4 text-left">
+      <div className="w-full rounded-3xl border border-border bg-surface p-5 text-left">
         <p className="text-sm text-muted">Hoy</p>
-        <p className="text-2xl font-semibold">{formatMinutes(today.focusSeconds)}</p>
+        <p className="font-display text-3xl font-semibold">
+          {formatMinutes(today.focusSeconds)}
+        </p>
         <div
           role="progressbar"
           aria-label="Progreso de la meta diaria"
@@ -75,7 +82,7 @@ const PRIORITY_LABEL = { low: "baja", medium: "media", high: "alta" } as const;
 
 function NextTaskCard({ task }: { task: Task | null }) {
   return (
-    <div className="w-full rounded-xl border border-border bg-surface p-4 text-left">
+    <div className="w-full rounded-3xl border border-border bg-surface p-5 text-left">
       {task ? (
         <>
           <p className="text-sm text-muted">Próxima tarea</p>

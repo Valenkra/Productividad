@@ -24,6 +24,8 @@ describe("headers de seguridad", () => {
     const sw = (await rules()).find((r) => r.source === "/sw.js");
     expect(valueOf(sw, "Content-Type")).toBe("application/javascript; charset=utf-8");
     expect(valueOf(sw, "Cache-Control")).toBe("no-cache, no-store, must-revalidate");
-    expect(valueOf(sw, "Content-Security-Policy")).toBe("default-src 'self'; script-src 'self'");
+    expect(valueOf(sw, "Content-Security-Policy")).toBe(
+      "default-src 'self'; script-src 'self'",
+    );
   });
 });

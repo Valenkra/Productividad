@@ -28,27 +28,37 @@ function Leaf({
   );
 }
 
+/** Zoom por etapa para `fit`: las etapas tempranas ocupan poco del dibujo. */
+const FIT_ZOOM = [0.6, 0.68, 0.78, 0.88, 0.95, 1];
+
 /**
  * Ilustración SVG por etapa (0–5). Pura y accesible (role="img" + etiqueta).
+ * `fit` recorta el vacío superior de las etapas tempranas (mismo aspecto, anclado a la maceta).
  * `growing` activa un balanceo suave; se desactiva con prefers-reduced-motion (CSS).
  */
 export function PlantIllustration({
   stage,
   growing = false,
   size = 200,
+  fit = false,
 }: {
   stage: number;
   growing?: boolean;
   size?: number;
+  fit?: boolean;
 }) {
   const s = Math.max(0, Math.min(MAX_STAGE, Math.floor(stage)));
+  const zoom = fit ? FIT_ZOOM[s] : 1;
+  const vbW = 120 * zoom;
+  const vbH = 140 * zoom;
+  const viewBox = `${(120 - vbW) / 2} ${140 - vbH} ${vbW} ${vbH}`;
   const stemTop = [118, 100, 80, 62, 50, 44][s];
 
   return (
     <svg
       role="img"
       aria-label={`Planta en etapa ${STAGE_NAMES[s]}`}
-      viewBox="0 0 120 140"
+      viewBox={viewBox}
       width={size}
       height={(size * 140) / 120}
       className="plant-pop"

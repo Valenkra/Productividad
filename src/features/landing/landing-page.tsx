@@ -62,10 +62,6 @@ export function LandingPage() {
             </p>
           </div>
 
-          <div className="lg:col-start-2 lg:row-span-2 lg:row-start-1">
-            <MiniFocusDemo />
-          </div>
-
           <div className="flex flex-col items-center gap-3 lg:col-start-1 lg:row-start-2 lg:items-start lg:self-start">
             <Link href="/login" className={cta}>
               Crear mi cuenta gratis
@@ -73,6 +69,10 @@ export function LandingPage() {
             <p className="text-sm text-muted">
               Guardá tu planta, tus tareas y tu historial.
             </p>
+          </div>
+
+          <div className="lg:col-start-2 lg:row-span-2 lg:row-start-1">
+            <MiniFocusDemo />
           </div>
         </section>
 

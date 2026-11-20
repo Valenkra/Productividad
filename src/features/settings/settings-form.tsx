@@ -59,8 +59,12 @@ function Form({ initial }: { initial: UserSettings }) {
   }
 
   return (
-    <form noValidate onSubmit={onSubmit} className="mx-auto flex max-w-md flex-col gap-4">
-      <h1 className="text-2xl font-semibold">Ajustes</h1>
+    <form
+      noValidate
+      onSubmit={onSubmit}
+      className="mx-auto flex max-w-md flex-col gap-4 rounded-3xl border border-border bg-surface/80 p-6"
+    >
+      <h1 className="font-display text-3xl font-semibold tracking-tight">Ajustes</h1>
       {FIELDS.map((f) => (
         <label key={f.key} className="flex flex-col gap-1 text-sm">
           {f.label}
@@ -71,14 +75,14 @@ function Form({ initial }: { initial: UserSettings }) {
             max={f.max}
             value={values[f.key]}
             onChange={(e) => setValues({ ...values, [f.key]: e.target.value })}
-            className="min-h-12 rounded-lg border border-border bg-surface px-3 text-base"
+            className="min-h-12 rounded-2xl border border-border bg-surface px-4 text-base"
           />
         </label>
       ))}
       <button
         type="submit"
         disabled={saving}
-        className="min-h-12 rounded-xl bg-leaf-strong px-5 text-base font-medium text-white disabled:opacity-50"
+        className="min-h-12 rounded-full bg-leaf-strong px-6 text-base font-medium text-white shadow-[0_12px_30px_-12px_rgba(58,95,55,0.8)] transition-colors hover:bg-leaf disabled:opacity-50"
       >
         {saving ? "Guardando…" : "Guardar"}
       </button>

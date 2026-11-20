@@ -77,6 +77,7 @@ export function MiniFocusDemo() {
           <PlantIllustration
             key={demo.stage}
             stage={demo.stage}
+            fit
             growing={status === "running"}
           />
         </div>

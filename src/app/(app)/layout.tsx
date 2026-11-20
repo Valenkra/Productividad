@@ -2,9 +2,9 @@ import { AppNav } from "@/components/layout/app-nav";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-col md:flex-row">
+    <div className="hero-glow flex min-h-screen flex-col md:flex-row">
       <AppNav />
-      <main className="flex-1 p-4 pb-20 md:p-8 md:pb-8">{children}</main>
+      <main className="flex-1 px-4 pb-28 pt-6 md:p-10 md:pb-10">{children}</main>
     </div>
   );
 }

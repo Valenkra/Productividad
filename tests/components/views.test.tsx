@@ -90,6 +90,27 @@ describe("PlantIllustration", () => {
     expect(screen.getByRole("img", { name: /Semilla/ })).toBeTruthy();
   });
 
+  it("con fit recorta las etapas tempranas para llenar el marco", () => {
+    const box = (stage: number, fit: boolean) => {
+      const { container } = render(<PlantIllustration stage={stage} fit={fit} />);
+      const [x, y, w, h] = container
+        .querySelector("svg")!
+        .getAttribute("viewBox")!
+        .split(" ")
+        .map(Number);
+      cleanup();
+      return { x, y, w, h };
+    };
+    expect(box(0, false)).toEqual({ x: 0, y: 0, w: 120, h: 140 });
+    expect(box(5, true)).toEqual({ x: 0, y: 0, w: 120, h: 140 });
+    const seed = box(0, true);
+    expect(seed.w).toBeLessThan(120);
+    // Mismo aspecto, anclado al borde inferior (maceta) y centrado en x.
+    expect(seed.w / seed.h).toBeCloseTo(120 / 140);
+    expect(seed.y + seed.h).toBeCloseTo(140);
+    expect(seed.x + seed.w / 2).toBeCloseTo(60);
+  });
+
   it("solo se balancea mientras crece", () => {
     const { container, rerender } = render(<PlantIllustration stage={2} />);
     expect(container.querySelector(".plant-sway")).toBeNull();

@@ -1,12 +1,12 @@
 # Próximos pasos de Focus Garden
 
-Estado a 2026-11-19. Para retomar en una sesión nueva: leer `CLAUDE.md`, `docs/SPEC.md`, `docs/TDD.md` y este archivo.
+Estado a 2026-11-20. Para retomar en una sesión nueva: leer `CLAUDE.md`, `docs/SPEC.md`, `docs/TDD.md` y este archivo.
 
 ## Estado actual
 
 - Hechas, todo **local** (sin Supabase): Fases 1 (base), 3 (tareas), 4 (tracking/Pomodoro), 5 (planta), 6 (dashboard/historial/ajustes), 7 (PWA) y la landing en `/`.
 - `npm run verify` limpio: 339 tests, cobertura ~99 % líneas, build OK. `npm run test:e2e` 7/7 (Playwright, build real, puerto 3112).
-- **Nada está commiteado** (el usuario no lo pidió). Hay muchos cambios sin commitear: conviene preguntar si quiere commit antes de seguir.
+- Los cambios de pulido (secciones 1 y 2) están hechos pero **sin commitear**.
 - Usuario fijo `local-user` y persistencia en memoria (se pierde al reiniciar el servidor).
 
 ## Reglas que siguen vigentes
@@ -17,20 +17,15 @@ Estado a 2026-11-19. Para retomar en una sesión nueva: leer `CLAUDE.md`, `docs/
 - Verificar lo visual con capturas Playwright, no solo con tests.
 - Entorno Windows: scripts grandes con Write/Edit o `.cjs`; no hay Python; matar servidores solo por PID del puerto (nunca `taskkill /IM node.exe`).
 
-## 1. Pulir la app interior (acordado con el usuario, es lo siguiente)
+## 1. Pulir la app interior — HECHO (2026-11-20)
 
-El usuario dijo que la página se veía «fea, plain y genérica». La landing ya tiene el sistema visual nuevo; falta llevarlo a la app interior.
+Fraunces, resplandor, tarjetas redondeadas y botones píldora llevados a Inicio, Foco, Jardín, Historial, Ajustes, Tareas y la navegación (barra flotante en móvil, barra lateral con logo en escritorio). Planta protagonista en Foco, Jardín e Inicio. Verificado con capturas a 390×844 y 1280×800, sin scroll horizontal.
 
-- Sistema a reutilizar: tipografía Fraunces (`font-display`), resplandor (`.hero-glow`, `.ground-glow`), tarjetas muy redondeadas, botones tipo píldora, paleta de `globals.css`.
-- Pantallas: Inicio (`/dashboard`), Foco, Jardín, Historial, Ajustes, Tareas, y la navegación (`src/components/layout/app-nav.tsx`).
-- En Foco y Jardín, que la planta y el temporizador sean protagonistas (mismo criterio que la landing).
-- Verificar con capturas a 390×844 y 1280×800, sin scroll horizontal. Los tests de rol/etiqueta existentes no deben romperse.
+## 2. Ajustes de la landing — HECHO salvo Safari/móviles reales
 
-## 2. Ajustes pendientes de la landing
-
-- En móvil el botón «Crear mi cuenta gratis» queda bajo el primer pliegue (se priorizó ver el Pomodoro entero). Evaluar subirlo.
-- En etapas tempranas la planta ocupa solo la mitad inferior del anillo (el dibujo tiene espacio vacío arriba): recortar o escalar.
-- Solo verificada en Chromium; falta Safari y móviles reales.
+- El botón «Crear mi cuenta gratis» ahora va antes de la demo y queda sobre el pliegue en móvil.
+- `PlantIllustration` acepta `fit`: recorta el vacío de las etapas tempranas (mismo aspecto, anclado a la maceta). Lo usan la demo, Foco, Jardín e Inicio.
+- **Pendiente:** verificar en Safari y móviles reales.
 
 ## 3. Validar la PWA en dispositivos reales
 

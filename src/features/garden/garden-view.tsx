@@ -30,10 +30,15 @@ export function GardenView() {
 
   return (
     <section className="mx-auto flex max-w-md flex-col items-center gap-5 text-center">
-      <h1 className="text-2xl font-semibold">Tu jardín</h1>
-      <PlantIllustration key={info.stage} stage={info.stage} />
+      <h1 className="font-display text-3xl font-semibold tracking-tight">Tu jardín</h1>
+      <div className="relative grid h-72 w-72 place-items-center sm:h-80 sm:w-80">
+        <div className="ground-glow absolute inset-0 rounded-full" aria-hidden="true" />
+        <div className="relative h-[90%] w-[90%] [&_svg]:h-full [&_svg]:w-full">
+          <PlantIllustration key={info.stage} stage={info.stage} fit />
+        </div>
+      </div>
       <div>
-        <p className="text-xl font-medium">{info.name}</p>
+        <p className="font-display text-2xl font-semibold">{info.name}</p>
         <p className="text-sm text-muted">
           {info.units} min de foco acumulados (+{info.partialSeconds}/60 s)
         </p>
@@ -75,7 +80,7 @@ export function GardenView() {
           return (
             <li
               key={name}
-              className={`rounded-lg border p-2 ${
+              className={`rounded-2xl border p-3 ${
                 reached ? "border-leaf bg-surface" : "border-border text-muted"
               }`}
             >

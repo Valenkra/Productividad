@@ -13,7 +13,10 @@ const DESKTOP =
 function setup(ua: string, { standalone = false, touch = 0 } = {}) {
   vi.spyOn(navigator, "userAgent", "get").mockReturnValue(ua);
   // jsdom no define maxTouchPoints, así que no se puede espiar: se define a mano.
-  Object.defineProperty(navigator, "maxTouchPoints", { value: touch, configurable: true });
+  Object.defineProperty(navigator, "maxTouchPoints", {
+    value: touch,
+    configurable: true,
+  });
   vi.stubGlobal(
     "matchMedia",
     (q: string) =>

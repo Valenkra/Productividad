@@ -143,6 +143,18 @@ describe("MiniFocusDemo", () => {
 });
 
 describe("LandingPage", () => {
+  it("el botón principal de registro aparece antes que la demo (queda sobre el pliegue en móvil)", () => {
+    render(<LandingPage />);
+    const hero = document.querySelector('[data-section="hero"]')!;
+    const cta = within(hero as HTMLElement).getByRole("link", {
+      name: "Crear mi cuenta gratis",
+    });
+    const demo = within(hero as HTMLElement).getByRole("timer");
+    expect(
+      cta.compareDocumentPosition(demo) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
   it("tiene un único título principal que promete lo esencial", () => {
     render(<LandingPage />);
     const h1 = screen.getAllByRole("heading", { level: 1 });

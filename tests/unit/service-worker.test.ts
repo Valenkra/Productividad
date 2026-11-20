@@ -29,7 +29,8 @@ function createFakeCaches() {
     open: async (name: string) => ({
       // Como `caches.open` real: abrir crea la caché aunque esté vacía.
       ...(store(name), {}),
-      addAll: async (urls: string[]) => urls.forEach((u) => store(name).set(u, `precache:${u}`)),
+      addAll: async (urls: string[]) =>
+        urls.forEach((u) => store(name).set(u, `precache:${u}`)),
       put: async (req: FakeRequest, res: unknown) => void store(name).set(req.url, res),
     }),
     match: async (req: FakeRequest | string) => {
@@ -55,12 +56,19 @@ function loadSw() {
   const fetchFn = async (req: FakeRequest) => {
     networkCalls.push(req.url);
     if (networkDown) throw new TypeError("offline");
-    return { ok: true, url: req.url, clone() { return this; } };
+    return {
+      ok: true,
+      url: req.url,
+      clone() {
+        return this;
+      },
+    };
   };
 
   const self = {
     location: { origin: ORIGIN },
-    addEventListener: (type: string, cb: (e: unknown) => void) => void (listeners[type] = cb),
+    addEventListener: (type: string, cb: (e: unknown) => void) =>
+      void (listeners[type] = cb),
     skipWaiting: () => void state.skipWaiting++,
     clients: { claim: async () => void state.claimed++ },
   };
@@ -76,9 +84,15 @@ function loadSw() {
 
   const doFetch = async (req: FakeRequest) => {
     let responded: Promise<unknown> | undefined;
-    const event: FetchEventLike = { request: req, respondWith: (p) => void (responded = p) };
+    const event: FetchEventLike = {
+      request: req,
+      respondWith: (p) => void (responded = p),
+    };
     listeners.fetch(event);
-    return { intercepted: responded !== undefined, response: responded ? await responded : undefined };
+    return {
+      intercepted: responded !== undefined,
+      response: responded ? await responded : undefined,
+    };
   };
 
   return {
@@ -132,7 +146,10 @@ describe("service worker: política de seguridad", () => {
   });
 
   it("no intercepta otros orígenes", async () => {
-    const r = await sw.fetch({ url: "https://evil.test/_next/static/a.js", method: "GET" });
+    const r = await sw.fetch({
+      url: "https://evil.test/_next/static/a.js",
+      method: "GET",
+    });
     expect(r.intercepted).toBe(false);
   });
 
@@ -163,7 +180,11 @@ describe("service worker: política de seguridad", () => {
 
   it("cachea solo estáticos permitidos: /_next/static, /icons y el manifest", async () => {
     await sw.install();
-    for (const p of ["/_next/static/x.css", "/icons/icon-192.png", "/manifest.webmanifest"]) {
+    for (const p of [
+      "/_next/static/x.css",
+      "/icons/icon-192.png",
+      "/manifest.webmanifest",
+    ]) {
       expect((await sw.fetch(get(p))).intercepted).toBe(true);
     }
     // Otro recurso del mismo origen (p. ej. una imagen cualquiera) no se cachea.

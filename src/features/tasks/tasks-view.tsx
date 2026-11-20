@@ -12,9 +12,9 @@ const PRIORITY_LABEL: Record<TaskPriority, string> = {
 };
 
 const input =
-  "min-h-12 rounded-lg border border-border bg-surface px-3 text-base focus-visible:outline-2 focus-visible:outline-leaf-strong";
+  "min-h-12 rounded-2xl border border-border bg-surface px-4 text-base focus-visible:outline-2 focus-visible:outline-leaf-strong";
 const button =
-  "min-h-11 rounded-lg border border-border bg-surface px-3 text-sm focus-visible:outline-2 focus-visible:outline-leaf-strong";
+  "min-h-11 rounded-full border border-border bg-surface px-4 text-sm hover:bg-background focus-visible:outline-2 focus-visible:outline-leaf-strong";
 
 async function request(url: string, method: string, body?: unknown): Promise<void> {
   const res = await fetch(url, {
@@ -85,7 +85,7 @@ export function TasksView() {
 
   return (
     <section className="mx-auto flex max-w-2xl flex-col gap-5">
-      <h1 className="text-2xl font-semibold">Tareas</h1>
+      <h1 className="font-display text-3xl font-semibold tracking-tight">Tareas</h1>
 
       <NewTaskForm
         onCreate={(body) => mutate(() => request("/api/tasks", "POST", body))}
@@ -170,7 +170,7 @@ export function TasksView() {
               <li
                 key={task.id}
                 data-title={task.title}
-                className="flex flex-col gap-2 rounded-xl border border-border bg-surface p-3"
+                className="flex flex-col gap-2 rounded-3xl border border-border bg-surface p-4"
               >
                 <div className="flex items-start gap-3">
                   <input
@@ -285,7 +285,7 @@ function NewTaskForm({
     <form
       noValidate
       onSubmit={submit}
-      className="flex flex-col gap-2 rounded-xl border border-border bg-surface p-3"
+      className="flex flex-col gap-2 rounded-3xl border border-border bg-surface p-4"
     >
       <label className="flex flex-col gap-1 text-sm">
         Nueva tarea
@@ -327,7 +327,7 @@ function NewTaskForm({
       )}
       <button
         type="submit"
-        className="min-h-12 rounded-xl bg-leaf-strong px-5 text-base font-medium text-white"
+        className="min-h-12 rounded-full bg-leaf-strong px-6 text-base font-medium text-white hover:bg-leaf"
       >
         Agregar
       </button>
@@ -356,7 +356,7 @@ function EditRow({
   return (
     <li
       data-title={task.title}
-      className="flex flex-col gap-2 rounded-xl border border-leaf bg-surface p-3"
+      className="flex flex-col gap-2 rounded-3xl border border-leaf bg-surface p-4"
     >
       <label className="flex flex-col gap-1 text-sm">
         Título
@@ -396,7 +396,7 @@ function EditRow({
       )}
       <div className="flex gap-2">
         <button
-          className="min-h-11 rounded-lg bg-leaf-strong px-4 text-sm font-medium text-white"
+          className="min-h-11 rounded-full bg-leaf-strong px-5 text-sm font-medium text-white hover:bg-leaf"
           onClick={() => {
             if (!title.trim()) {
               setError("El título no puede quedar vacío.");

@@ -28,7 +28,10 @@ test("el service worker se registra y controla la página", async ({ page }) => 
   expect(controlled).toBe(true);
 });
 
-test("sin conexión, una navegación nueva muestra la página offline", async ({ page, context }) => {
+test("sin conexión, una navegación nueva muestra la página offline", async ({
+  page,
+  context,
+}) => {
   await page.goto("/");
   await page.evaluate(() => navigator.serviceWorker.ready);
   await page.reload(); // ya controlada por el SW
@@ -51,9 +54,14 @@ test("la API nunca queda en la caché del service worker", async ({ page }) => {
   expect(cached.filter((u) => u.includes("/api/"))).toEqual([]);
 });
 
-test("humo funcional: en /focus se puede iniciar una sesión y corre el temporizador", async ({ page }) => {
+test("humo funcional: en /focus se puede iniciar una sesión y corre el temporizador", async ({
+  page,
+}) => {
   await page.goto("/focus");
-  await page.getByRole("button", { name: /empezar|iniciar/i }).first().click();
+  await page
+    .getByRole("button", { name: /empezar|iniciar/i })
+    .first()
+    .click();
   await expect(page.getByLabel(/^Quedan \d\d:\d\d$/)).toBeVisible();
   await expect(page.getByText("Contando tiempo")).toBeVisible();
 });

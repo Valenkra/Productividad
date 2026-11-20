@@ -24,7 +24,7 @@ export function HistoryView() {
 
   return (
     <section className="mx-auto flex max-w-2xl flex-col gap-6">
-      <h1 className="text-2xl font-semibold">Historial</h1>
+      <h1 className="font-display text-3xl font-semibold tracking-tight">Historial</h1>
 
       <dl className="grid grid-cols-3 gap-3 text-center">
         {[
@@ -32,15 +32,15 @@ export function HistoryView() {
           ["Total", formatMinutes(data.totalFocusSeconds)],
           ["Racha", `${data.streakDays} ${data.streakDays === 1 ? "día" : "días"}`],
         ].map(([label, value]) => (
-          <div key={label} className="rounded-xl border border-border bg-surface p-3">
+          <div key={label} className="rounded-3xl border border-border bg-surface p-4">
             <dt className="text-xs text-muted">{label}</dt>
-            <dd className="text-lg font-semibold">{value}</dd>
+            <dd className="font-display text-xl font-semibold">{value}</dd>
           </div>
         ))}
       </dl>
 
       <div>
-        <h2 className="mb-2 font-medium">Foco por día</h2>
+        <h2 className="mb-2 font-display text-xl font-semibold">Foco por día</h2>
         {/* Barras con alto proporcional; la tabla accesible repite los mismos datos. */}
         <div className="flex h-40 items-end gap-1" aria-hidden="true">
           {data.days.map((d) => (
@@ -77,7 +77,7 @@ export function HistoryView() {
       </div>
 
       <div>
-        <h2 className="mb-2 font-medium">Por tarea</h2>
+        <h2 className="mb-2 font-display text-xl font-semibold">Por tarea</h2>
         {data.perTask.length === 0 ? (
           <p className="text-sm text-muted">
             Todavía no hay sesiones asociadas a tareas.
@@ -98,7 +98,7 @@ export function HistoryView() {
       </div>
 
       <div>
-        <h2 className="mb-2 font-medium">Sesiones recientes</h2>
+        <h2 className="mb-2 font-display text-xl font-semibold">Sesiones recientes</h2>
         {data.recentSessions.length === 0 ? (
           <p className="text-sm text-muted">Todavía no terminaste ninguna sesión.</p>
         ) : (
@@ -106,7 +106,7 @@ export function HistoryView() {
             {data.recentSessions.map((s) => (
               <li
                 key={s.id}
-                className="rounded-xl border border-border bg-surface p-3 text-sm"
+                className="rounded-2xl border border-border bg-surface p-3 text-sm"
               >
                 <div className="flex justify-between">
                   <span className="font-medium">{MODE_LABEL[s.mode]}</span>

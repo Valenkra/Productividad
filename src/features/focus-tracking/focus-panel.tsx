@@ -15,9 +15,10 @@ const MODE_LABEL: Record<FocusMode, string> = {
 };
 
 const btn =
-  "min-h-12 rounded-xl px-5 text-base font-medium disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-leaf-strong";
-const primary = `${btn} bg-leaf-strong text-white`;
-const secondary = `${btn} border border-border bg-surface`;
+  "min-h-12 rounded-full px-6 text-base font-medium transition-colors disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-leaf-strong";
+const primary = `${btn} bg-leaf-strong text-white shadow-[0_12px_30px_-12px_rgba(58,95,55,0.8)] hover:bg-leaf`;
+const secondary = `${btn} border border-border bg-surface hover:bg-background`;
+const card = "rounded-3xl border border-border bg-surface p-4";
 
 function format(total: number) {
   const m = Math.floor(total / 60);
@@ -62,19 +63,36 @@ export function FocusPanel() {
           : "Esperando que vuelvas a la app";
 
   return (
-    <section className="mx-auto flex max-w-md flex-col items-center gap-6 text-center">
-      <h1 className="text-lg font-medium text-muted">{MODE_LABEL[mode]}</h1>
+    <section className="mx-auto flex max-w-md flex-col items-center gap-5 text-center">
+      <h1 className="text-xs font-semibold uppercase tracking-[0.2em] text-leaf-strong">
+        {MODE_LABEL[mode]}
+      </h1>
+
+      <div className="relative grid h-64 w-64 place-items-center sm:h-72 sm:w-72">
+        <div className="ground-glow absolute inset-0 rounded-full" aria-hidden="true" />
+        <div className="relative h-[88%] w-[88%] [&_svg]:h-full [&_svg]:w-full">
+          <PlantIllustration
+            key={`${growth.stage}-${growth.units}`}
+            stage={growth.stage}
+            growing={Boolean(f.counting && session?.mode === "focus")}
+            fit
+          />
+        </div>
+      </div>
+      <p className="-mt-2 text-sm text-muted">
+        {growth.name} · {growth.units} min (+{growth.partialSeconds}/60 s)
+      </p>
 
       {f.notice && (
         <p
           role="status"
-          className="rounded-lg border border-border bg-surface p-3 text-sm"
+          className="rounded-2xl border border-border bg-surface p-3 text-sm"
         >
           {f.notice}
         </p>
       )}
       {!f.online && (
-        <p role="alert" className="rounded-lg border border-soil bg-surface p-3 text-sm">
+        <p role="alert" className="rounded-2xl border border-soil bg-surface p-3 text-sm">
           Estás sin conexión. El tiempo que no se pueda confirmar no se acredita.
         </p>
       )}
@@ -87,7 +105,7 @@ export function FocusPanel() {
       {f.open && session ? (
         <>
           <p
-            className="text-7xl font-semibold tabular-nums"
+            className="font-display text-7xl font-semibold tabular-nums tracking-tight"
             aria-label={`Quedan ${format(f.remainingSeconds)}`}
           >
             {format(f.remainingSeconds)}
@@ -138,7 +156,7 @@ export function FocusPanel() {
       ) : (
         <>
           {finished && session && (
-            <div role="status" className="rounded-xl border border-border bg-surface p-4">
+            <div role="status" className={card}>
               <p className="font-medium">
                 {session.status === "completed" ? "¡Fase completada!" : "Fase terminada"}
               </p>
@@ -154,7 +172,7 @@ export function FocusPanel() {
               )}
             </div>
           )}
-          <p className="text-7xl font-semibold tabular-nums text-muted">
+          <p className="font-display text-7xl font-semibold tabular-nums tracking-tight text-muted">
             {format(f.state.nextPlannedSeconds)}
           </p>
           {nextMode === "focus" && openTasks.length > 0 && (
@@ -163,7 +181,7 @@ export function FocusPanel() {
               <select
                 value={taskId}
                 onChange={(e) => setTaskId(e.target.value)}
-                className="min-h-12 rounded-lg border border-border bg-surface px-3 text-base"
+                className="min-h-12 rounded-2xl border border-border bg-surface px-4 text-base"
               >
                 <option value="">Sin tarea</option>
                 {openTasks.map((t) => (
@@ -184,17 +202,6 @@ export function FocusPanel() {
         </>
       )}
 
-      <div className="flex flex-col items-center gap-1">
-        <PlantIllustration
-          key={`${growth.stage}-${growth.units}`}
-          stage={growth.stage}
-          growing={Boolean(f.counting && session?.mode === "focus")}
-          size={120}
-        />
-        <p className="text-sm text-muted">
-          {growth.name} · {growth.units} min (+{growth.partialSeconds}/60 s)
-        </p>
-      </div>
       <p className="text-xs text-muted">
         El tiempo cuenta solo con la app abierta, visible y en primer plano. No es una
         medida de atención real.

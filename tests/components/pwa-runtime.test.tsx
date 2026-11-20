@@ -66,7 +66,10 @@ describe("SwRegister", () => {
     const register = vi.fn().mockResolvedValue({});
     stubServiceWorker(register);
     render(<SwRegister />);
-    expect(register).toHaveBeenCalledWith("/sw.js", { scope: "/", updateViaCache: "none" });
+    expect(register).toHaveBeenCalledWith("/sw.js", {
+      scope: "/",
+      updateViaCache: "none",
+    });
   });
 
   it("en desarrollo no registra nada (evita cachés raras mientras se programa)", () => {
